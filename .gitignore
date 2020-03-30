@@ -1,0 +1,8 @@
+build/
+sdkconfig
+sdkconfig.old
+.cproject
+.project
+*~
+.*~
+
