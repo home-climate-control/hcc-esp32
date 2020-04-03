@@ -1,13 +1,25 @@
-menu "Example Configuration"
+menu "MQTT Configuration"
 
     config BROKER_URL
-        string "Broker URL"
+        string "MQTT broker URL"
         default "mqtt://mqtt.eclipse.org"
         help
-            URL of the broker to connect to
+            URL of the MQTT broker to connect to
 
     config BROKER_URL_FROM_STDIN
         bool
         default y if BROKER_URL = "FROM_STDIN"
+
+    config BROKER_PUB_ROOT
+        string "Publish topic root"
+        default "/hcc"
+        help
+            MQTT topic to publish messages under ($topic/edge for device messages, $topic/sensor for sensor samples)
+
+    config BROKER_SUB_ROOT
+        string "Subscribe topic root"
+        default "/edge"
+        help
+            MQTT topic root to listen to commands on
 
 endmenu
