@@ -1,6 +1,8 @@
 # Home Climate Control ESP32 based edge device firmware
 
-_(Work in progress - the application is being documented *before* it is built.Having a roadmap helps)_
+Coming up. For now take a look at [hcc-esp8266](https://github.com/home-climate-control/hcc-esp8266).
+
+(Work in progress - the application is being documented *before* it is built.Having a roadmap helps)_
 
 This application connects to WiFi, then to the MQTT broker, introduces itself and starts sending sensor data on MQTT publish topic, and listening to commands on MQTT subscribe topic,  according to [DZ edge device MQTT protocol](https://github.com/home-climate-control/dz/issues/113).
 
