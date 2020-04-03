@@ -1,23 +1,26 @@
-# ESP-MQTT sample application
-(See the README.md file in the upper level 'examples' directory for more information about examples.)
+# Home Climate Control ESP32 based edge device firmware
 
-This example connects to the broker URI selected using `idf.py menuconfig` (using mqtt tcp transport) and as a demonstration subscribes/unsubscribes and send a message on certain topic.
-(Please note that the public broker is maintained by the community so may not be always available, for details please see this [disclaimer](https://iot.eclipse.org/getting-started/#sandboxes))
+_(Work in progress - the application is being documented *before* it is built.Having a roadmap helps)_
 
-Note: If the URI equals `FROM_STDIN` then the broker address is read from stdin upon application startup (used for testing)
+This application connects to WiFi, then to the MQTT broker, introduces itself and starts sending sensor data on MQTT publish topic, and listening to commands on MQTT subscribe topic,  according to [DZ edge device MQTT protocol](https://github.com/home-climate-control/dz/issues/113).
 
-It uses ESP-MQTT library which implements mqtt client to connect to mqtt broker.
+All configuration parameteres are selected using `idf.py menuconfiig`.
 
-## How to use example
+## How to use this application
+
+### Prerequisites
+
+[Install ESP-IDF Development Framework](https://github.com/espressif/esp-idf#setting-up-esp-idf).
 
 ### Hardware Required
 
-This example can be executed on any ESP32 board, the only required interface is WiFi and connection to internet.
+This application can be executed on any ESP32 board, the only required interface is WiFi and connection to internet (sensor and actuator hardware requirements coming soon; you can count on 1-Wire being the first).
 
 ### Configure the project
 
 * Open the project configuration menu (`idf.py menuconfig`)
-* Configure Wi-Fi or Ethernet under "Example Connection Configuration" menu. See "Establishing Wi-Fi or Ethernet Connection" section in [examples/protocols/README.md](../../README.md) for more details.
+* Configure Wi-Fi under "Connectivity Configuration" menu.
+* Configure MQTT under "MQTT Configuration" menu.
 * When using Make build system, set `Default serial port` under `Serial flasher config`.
 
 ### Build and Flash
@@ -30,30 +33,12 @@ idf.py -p PORT flash monitor
 
 (To exit the serial monitor, type ``Ctrl-]``.)
 
-See the Getting Started Guide for full steps to configure and use ESP-IDF to build projects.
-
 ## Example Output
 
+The output is duplicated on the serial console and in MQTT output stream.
+
 ```
-I (3714) event: sta ip: 192.168.0.139, mask: 255.255.255.0, gw: 192.168.0.2
-I (3714) system_api: Base MAC address is not set, read default base MAC address from BLK0 of EFUSE
-I (3964) MQTT_CLIENT: Sending MQTT CONNECT message, type: 1, id: 0000
-I (4164) MQTT_EXAMPLE: MQTT_EVENT_CONNECTED
-I (4174) MQTT_EXAMPLE: sent publish successful, msg_id=41464
-I (4174) MQTT_EXAMPLE: sent subscribe successful, msg_id=17886
-I (4174) MQTT_EXAMPLE: sent subscribe successful, msg_id=42970
-I (4184) MQTT_EXAMPLE: sent unsubscribe successful, msg_id=50241
-I (4314) MQTT_EXAMPLE: MQTT_EVENT_PUBLISHED, msg_id=41464
-I (4484) MQTT_EXAMPLE: MQTT_EVENT_SUBSCRIBED, msg_id=17886
-I (4484) MQTT_EXAMPLE: sent publish successful, msg_id=0
-I (4684) MQTT_EXAMPLE: MQTT_EVENT_SUBSCRIBED, msg_id=42970
-I (4684) MQTT_EXAMPLE: sent publish successful, msg_id=0
-I (4884) MQTT_CLIENT: deliver_publish, message_length_read=19, message_length=19
-I (4884) MQTT_EXAMPLE: MQTT_EVENT_DATA
-TOPIC=/topic/qos0
-DATA=data
-I (5194) MQTT_CLIENT: deliver_publish, message_length_read=19, message_length=19
-I (5194) MQTT_EXAMPLE: MQTT_EVENT_DATA
-TOPIC=/topic/qos0
-DATA=data
+/hcc/edge {"entityType":"sensor","deviceId":"ESP8266-00621CC5","sources": ["28C06879A20003CE","289E0279A201039B"]}
+/hcc/sensor/28C06879A20003CE {"entity_type":"sensor","name":"28C06879A20003CE","signature":"T28C06879A20003CE","signal":32.13,"device_id":"ESP8266-00621CC5"}
+/hcc/sensor/289E0279A201039B {"entity_type":"sensor","name":"289E0279A201039B","signature":"T289E0279A201039B","signal":41.63,"device_id":"ESP8266-00621CC5"}
 ```
