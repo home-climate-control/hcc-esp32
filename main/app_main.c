@@ -41,6 +41,11 @@
 
 static const char *TAG = "hcc-esp32";
 
+owb_rmt_driver_info rmt_driver_info;
+OneWireBus *owb;
+int devices_found = 0;
+DS18B20_Info *devices[MAX_DEVICES] = {0};
+
 static void onewire_start(void)
 {
     // To debug OWB, use 'make menuconfig' to set default Log level to DEBUG, then uncomment:
@@ -50,8 +55,6 @@ static void onewire_start(void)
     vTaskDelay(2000.0 / portTICK_PERIOD_MS);
 
     // Create a 1-Wire bus, using the RMT timeslot driver
-    OneWireBus *owb;
-    owb_rmt_driver_info rmt_driver_info;
     owb = owb_rmt_initialize(&rmt_driver_info, GPIO_DS18B20_0, RMT_CHANNEL_1, RMT_CHANNEL_0);
 
     // enable CRC check for ROM code
@@ -60,7 +63,6 @@ static void onewire_start(void)
     ESP_LOGI(TAG, "Looking for connected 1-Wire devices on pin %d...", GPIO_DS18B20_0);
 
     OneWireBus_ROMCode device_rom_codes[MAX_DEVICES] = {0};
-    int devices_found = 0;
     OneWireBus_SearchState search_state = {0};
     bool found = false;
     owb_search_first(owb, &search_state, &found);
@@ -75,7 +77,6 @@ static void onewire_start(void)
     ESP_LOGI(TAG, "Found %d device%s", devices_found, devices_found == 1 ? "" : "s");
 
     // Create DS18B20 devices on the 1-Wire bus
-    DS18B20_Info *devices[MAX_DEVICES] = {0};
     for (int i = 0; i < devices_found; ++i) {
         DS18B20_Info *ds18b20_info = ds18b20_malloc();
         devices[i] = ds18b20_info;
@@ -91,6 +92,47 @@ static void onewire_start(void)
         // enable CRC check for temperature readings
         ds18b20_use_crc(ds18b20_info, true);
         ds18b20_set_resolution(ds18b20_info, DS18B20_RESOLUTION);
+    }
+}
+
+static void onewire_poll(void)
+{
+    // Read temperatures more efficiently by starting conversions on all devices at the same time
+    int errors_count[MAX_DEVICES] = {0};
+    int sample_count = 0;
+    if (devices_found > 0) {
+        TickType_t last_wake_time = xTaskGetTickCount();
+
+        while (1) {
+            last_wake_time = xTaskGetTickCount();
+
+            ds18b20_convert_all(owb);
+
+            // In this application all devices use the same resolution,
+            // so use the first device to determine the delay
+            ds18b20_wait_for_conversion(devices[0]);
+
+            // Read the results immediately after conversion otherwise it may fail
+            // (using printf before reading may take too long)
+            float readings[MAX_DEVICES] = { 0 };
+            DS18B20_ERROR errors[MAX_DEVICES] = { 0 };
+
+            for (int i = 0; i < devices_found; ++i) {
+                errors[i] = ds18b20_read_temp(devices[i], &readings[i]);
+            }
+
+            // Print results in a separate loop, after all have been read
+            printf("\nTemperature readings (degrees C): sample %d\n", ++sample_count);
+            for (int i = 0; i < devices_found; ++i) {
+                if (errors[i] != DS18B20_OK) {
+                    ++errors_count[i];
+                }
+
+                printf("  %d: %.1f    %d errors\n", i, readings[i], errors_count[i]);
+            }
+
+            vTaskDelayUntil(&last_wake_time, SAMPLE_PERIOD / portTICK_PERIOD_MS);
+        }
     }
 }
 
@@ -186,4 +228,5 @@ void app_main(void)
 
     onewire_start();
     mqtt_start();
+    onewire_poll();
 }
