@@ -1,4 +1,4 @@
-menu "MQTT Configuration"
+menu "hcc-esp32 MQTT Configuration"
 
     config BROKER_URL
         string "MQTT broker URL"
@@ -21,5 +21,18 @@ menu "MQTT Configuration"
         default "/edge"
         help
             MQTT topic root to listen to commands on
+
+endmenu
+
+menu "hcc-esp32 1-Wire Configuration"
+
+    config ONE_WIRE_GPIO
+        int "1-Wire GPIO number"
+	    range 0 34
+            default 4
+            help
+                GPIO number (IOxx) to access One Wire Bus.
+                Some GPIOs are used for other purposes (flash connections, etc.) and cannot be used.
+                GPIOs 35-39 are input-only so cannot be used to drive the One Wire Bus.
 
 endmenu
