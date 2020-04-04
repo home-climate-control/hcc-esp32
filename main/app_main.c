@@ -46,6 +46,15 @@ OneWireBus *owb;
 int devices_found = 0;
 DS18B20_Info *devices[MAX_DEVICES] = {0};
 
+static void log_configuration(void)
+{
+    ESP_LOGI(TAG, "[conf] MQTT broker: %s", CONFIG_BROKER_URL);
+    ESP_LOGI(TAG, "[conf] MQTT pub root: %s", CONFIG_BROKER_PUB_ROOT);
+    ESP_LOGI(TAG, "[conf] MQTT sub root: %s", CONFIG_BROKER_SUB_ROOT);
+    ESP_LOGI(TAG, "[conf] 1-Wire GPIO pin: %d", CONFIG_ONE_WIRE_GPIO);
+    ESP_LOGI(TAG, "[conf] 1-Wire sampling interval: %d", CONFIG_ONE_WIRE_POLL_SECONDS);
+}
+
 static void onewire_start(void)
 {
     // To debug OWB, use 'make menuconfig' to set default Log level to DEBUG, then uncomment:
@@ -219,6 +228,8 @@ void app_main(void)
     ESP_ERROR_CHECK(nvs_flash_init());
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
+
+    log_configuration();
 
     onewire_start();
 
