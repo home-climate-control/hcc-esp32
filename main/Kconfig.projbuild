@@ -6,10 +6,6 @@ menu "hcc-esp32 MQTT Configuration"
         help
             URL of the MQTT broker to connect to
 
-    config BROKER_URL_FROM_STDIN
-        bool
-        default y if BROKER_URL = "FROM_STDIN"
-
     config BROKER_PUB_ROOT
         string "Publish topic root"
         default "/hcc"
