@@ -46,6 +46,9 @@ OneWireBus *owb;
 int devices_found = 0;
 DS18B20_Info *devices[MAX_DEVICES] = {0};
 
+char* edge_pub_topic;
+char* sensor_pub_topics[MAX_DEVICES] = {0};
+
 void log_configuration(void)
 {
     ESP_LOGI(TAG, "[conf] MQTT broker: %s", CONFIG_BROKER_URL);
@@ -53,6 +56,22 @@ void log_configuration(void)
     ESP_LOGI(TAG, "[conf] MQTT sub root: %s", CONFIG_BROKER_SUB_ROOT);
     ESP_LOGI(TAG, "[conf] 1-Wire GPIO pin: %d", CONFIG_ONE_WIRE_GPIO);
     ESP_LOGI(TAG, "[conf] 1-Wire sampling interval: %ds", CONFIG_ONE_WIRE_POLL_SECONDS);
+}
+
+/**
+ * Allocates memory and returns the sensor topic rendered as ${CONFIG_BROKER_PUB_ROOT}/sensor/${ADDRESS}
+ */
+char* create_topic_from_address(const char *address) {
+
+    const char* sensor = "/sensor/";
+    int bufsize = strlen(CONFIG_BROKER_PUB_ROOT) + strlen(sensor) + strlen(address) + 1;
+    char *result = (char *) malloc(bufsize);
+
+    strcpy(result, CONFIG_BROKER_PUB_ROOT);
+    strcpy(result + strlen(CONFIG_BROKER_PUB_ROOT), sensor);
+    strcpy(result + strlen(CONFIG_BROKER_PUB_ROOT) + strlen(sensor), address);
+
+    return result;
 }
 
 void onewire_start(void)
@@ -78,8 +97,11 @@ void onewire_start(void)
     while (found) {
         char rom_code_s[17];
         owb_string_from_rom_code(search_state.rom_code, rom_code_s, sizeof(rom_code_s));
+        strupr(rom_code_s);
         ESP_LOGI(TAG, "[1-Wire] %d: %s", devices_found, rom_code_s);
         device_rom_codes[devices_found] = search_state.rom_code;
+        sensor_pub_topics[devices_found] = create_topic_from_address(rom_code_s);
+
         ++devices_found;
         owb_search_next(owb, &search_state, &found);
     }
@@ -108,7 +130,6 @@ void onewire_poll(void)
 {
     // Read temperatures more efficiently by starting conversions on all devices at the same time
     int errors_count[MAX_DEVICES] = {0};
-    int sample_count = 0;
 
     TickType_t last_wake_time = xTaskGetTickCount();
 
@@ -136,7 +157,7 @@ void onewire_poll(void)
                 ++errors_count[i];
             }
 
-            ESP_LOGI(TAG, "[1-Wire]  @%d %d: %.1fC, %d errors", sample_count++, i, readings[i], errors_count[i]);
+            ESP_LOGI(TAG, "[1-Wire] %s: %.1fC, %d errors", sensor_pub_topics[i], readings[i], errors_count[i]);
         }
 
         // VT: NOTE: This call will block and make parallel processing impossible
@@ -151,7 +172,7 @@ static esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event)
     // your_context_t *context = event->context;
     switch (event->event_id) {
     case MQTT_EVENT_CONNECTED:
-        ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED");
+        ESP_LOGI(TAG, "[mqtt] connected to %s", CONFIG_BROKER_URL);
         msg_id = esp_mqtt_client_publish(client, "/topic/qos1", "data_3", 0, 1, 0);
         ESP_LOGI(TAG, "sent publish successful, msg_id=%d", msg_id);
 
