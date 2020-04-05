@@ -109,39 +109,37 @@ static void onewire_poll(void)
     // Read temperatures more efficiently by starting conversions on all devices at the same time
     int errors_count[MAX_DEVICES] = {0};
     int sample_count = 0;
-    if (devices_found > 0) {
-        TickType_t last_wake_time = xTaskGetTickCount();
 
-        while (1) {
-            last_wake_time = xTaskGetTickCount();
+    TickType_t last_wake_time = xTaskGetTickCount();
 
-            ds18b20_convert_all(owb);
+    while (1) {
+        last_wake_time = xTaskGetTickCount();
 
-            // In this application all devices use the same resolution,
-            // so use the first device to determine the delay
-            ds18b20_wait_for_conversion(devices[0]);
+        ds18b20_convert_all(owb);
 
-            // Read the results immediately after conversion otherwise it may fail
-            // (using printf before reading may take too long)
-            float readings[MAX_DEVICES] = { 0 };
-            DS18B20_ERROR errors[MAX_DEVICES] = { 0 };
+        // In this application all devices use the same resolution,
+        // so use the first device to determine the delay
+        ds18b20_wait_for_conversion(devices[0]);
 
-            for (int i = 0; i < devices_found; ++i) {
-                errors[i] = ds18b20_read_temp(devices[i], &readings[i]);
-            }
+        // Read the results immediately after conversion otherwise it may fail
+        // (using printf before reading may take too long)
+        float readings[MAX_DEVICES] = { 0 };
+        DS18B20_ERROR errors[MAX_DEVICES] = { 0 };
 
-            // Print results in a separate loop, after all have been read
-            printf("\nTemperature readings (degrees C): sample %d\n", ++sample_count);
-            for (int i = 0; i < devices_found; ++i) {
-                if (errors[i] != DS18B20_OK) {
-                    ++errors_count[i];
-                }
-
-                printf("  %d: %.1f    %d errors\n", i, readings[i], errors_count[i]);
-            }
-
-            vTaskDelayUntil(&last_wake_time, SAMPLE_PERIOD / portTICK_PERIOD_MS);
+        for (int i = 0; i < devices_found; ++i) {
+            errors[i] = ds18b20_read_temp(devices[i], &readings[i]);
         }
+
+        // Print results in a separate loop, after all have been read
+        for (int i = 0; i < devices_found; ++i) {
+            if (errors[i] != DS18B20_OK) {
+                ++errors_count[i];
+            }
+
+            ESP_LOGI(TAG, "[1-Wire]  @%d %d: %.1fC, %d errors", sample_count++, i, readings[i], errors_count[i]);
+        }
+
+        vTaskDelayUntil(&last_wake_time, SAMPLE_PERIOD / portTICK_PERIOD_MS);
     }
 }
 
