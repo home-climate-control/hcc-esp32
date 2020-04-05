@@ -46,6 +46,7 @@ OneWireBus *owb;
 int devices_found = 0;
 DS18B20_Info *devices[MAX_DEVICES] = {0};
 
+char device_id[19];
 char* edge_pub_topic;
 char* sensor_pub_topics[MAX_DEVICES] = {0};
 
@@ -59,7 +60,27 @@ void log_configuration(void)
 }
 
 /**
- * Allocates memory and returns the sensor topic rendered as ${CONFIG_BROKER_PUB_ROOT}/sensor/${ADDRESS}
+ * Sets device_id to "ESP32-${esp_read_mac()}";
+ * Sets edge_pub_topic to "{@CONFIG_BROKER_PUB_ROOT}/edge/".
+ */
+void create_identity() {
+
+    uint8_t id[6] = {0};
+    ESP_ERROR_CHECK(esp_read_mac(id, ESP_MAC_WIFI_STA));
+
+    strcpy(device_id, "ESP32-");
+    sprintf(device_id + 6, "%02X%02X%02X%02X%02X%02X", id[0], id[1], id[2], id[3], id[4], id[5]);
+
+    edge_pub_topic = (char *)malloc(strlen(CONFIG_BROKER_PUB_ROOT) + 5 + 1);
+
+    strcpy(edge_pub_topic, CONFIG_BROKER_PUB_ROOT);
+    strcpy(edge_pub_topic + strlen(CONFIG_BROKER_PUB_ROOT), "/edge");
+
+    ESP_LOGI(TAG, "[id] device id: %s", device_id);
+}
+
+/**
+ * Allocates memory and returns the sensor topic rendered as "${CONFIG_BROKER_PUB_ROOT}/sensor/${ADDRESS}"
  */
 char* create_topic_from_address(const char *address) {
 
@@ -173,7 +194,7 @@ static esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event)
     switch (event->event_id) {
     case MQTT_EVENT_CONNECTED:
         ESP_LOGI(TAG, "[mqtt] connected to %s", CONFIG_BROKER_URL);
-        msg_id = esp_mqtt_client_publish(client, "/topic/qos1", "data_3", 0, 1, 0);
+        msg_id = esp_mqtt_client_publish(client, edge_pub_topic, device_id, 0, 1, 0);
         ESP_LOGI(TAG, "sent publish successful, msg_id=%d", msg_id);
 
         msg_id = esp_mqtt_client_subscribe(client, "/topic/qos0", 0);
@@ -253,6 +274,7 @@ void app_main(void)
     log_configuration();
 
     onewire_start();
+    create_identity();
 
     /* This helper function configures Wi-Fi or Ethernet, as selected in menuconfig.
      * Read "Establishing Wi-Fi or Ethernet Connection" section in
