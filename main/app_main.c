@@ -139,6 +139,7 @@ static void onewire_poll(void)
             ESP_LOGI(TAG, "[1-Wire]  @%d %d: %.1fC, %d errors", sample_count++, i, readings[i], errors_count[i]);
         }
 
+        // VT: NOTE: This call will block and make parallel processing impossible
         vTaskDelayUntil(&last_wake_time, SAMPLE_PERIOD / portTICK_PERIOD_MS);
     }
 }
