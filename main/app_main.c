@@ -34,6 +34,9 @@
 #include "owb_rmt.h"
 #include "ds18b20.h"
 
+#include "cJSON.h"
+
+
 #define GPIO_DS18B20_0       (CONFIG_ONE_WIRE_GPIO)
 #define MAX_DEVICES          (8)
 #define DS18B20_RESOLUTION   (DS18B20_RESOLUTION_12_BIT)
@@ -46,9 +49,30 @@ OneWireBus *owb;
 int devices_found = 0;
 DS18B20_Info *devices[MAX_DEVICES] = {0};
 
+typedef struct sensor_t {
+    char address[17];
+    char* topic;
+} sensor;
+
 char device_id[19];
 char* edge_pub_topic;
-char* sensor_pub_topics[MAX_DEVICES] = {0};
+char* mqtt_hello = "NO HELLO";
+sensor sensors[MAX_DEVICES] = {0};
+
+struct hello {
+    const char* entity_type;
+    const char* device_id;
+    const char* sources[];
+};
+
+struct sensor_sample {
+    const char* entity_type;
+    const char* name;
+    const char* signature;
+    const float signal;
+    const long timestamp;
+    const char *device_id;
+};
 
 void log_configuration(void)
 {
@@ -57,6 +81,40 @@ void log_configuration(void)
     ESP_LOGI(TAG, "[conf] MQTT sub root: %s", CONFIG_BROKER_SUB_ROOT);
     ESP_LOGI(TAG, "[conf] 1-Wire GPIO pin: %d", CONFIG_ONE_WIRE_GPIO);
     ESP_LOGI(TAG, "[conf] 1-Wire sampling interval: %ds", CONFIG_ONE_WIRE_POLL_SECONDS);
+}
+
+/**
+ * Allocates memory and returns the MQTT message rendered as follows in the example below,
+ * but in one line (multiline for readability).
+ *
+ * {
+ *  "deviceId": "ESP32-246F28A7C53C",
+ *  "entityType": "sensor",
+ *  "sources": [
+ *      "D90301A2792B0528",
+ *      "E40300A27970F728"
+ *  ]
+ * }
+ */
+void create_hello() {
+
+    cJSON* json_root = cJSON_CreateObject();
+    cJSON_AddItemToObject(json_root, "entityType", cJSON_CreateString("sensor"));
+    cJSON_AddItemToObject(json_root, "deviceId", cJSON_CreateString(device_id));
+
+    const char* sources[devices_found];
+    for (int offset = 0; offset < devices_found; offset++) {
+        sources[offset] = (char *) &sensors[offset].address;
+    }
+
+    cJSON* json_sources = cJSON_CreateStringArray(sources, devices_found);
+    cJSON_AddItemToObject(json_root, "sources", json_sources);
+
+    // VT: NOTE: Careful, this allocates memory, need to delete it if we're going to re-render it
+    mqtt_hello = cJSON_PrintUnformatted(json_root);
+    ESP_LOGI(TAG, "[mqtt] %s %s", edge_pub_topic, mqtt_hello);
+
+    cJSON_Delete(json_root);
 }
 
 /**
@@ -77,6 +135,8 @@ void create_identity() {
     strcpy(edge_pub_topic + strlen(CONFIG_BROKER_PUB_ROOT), "/edge");
 
     ESP_LOGI(TAG, "[id] device id: %s", device_id);
+
+    create_hello();
 }
 
 /**
@@ -121,7 +181,9 @@ void onewire_start(void)
         strupr(rom_code_s);
         ESP_LOGI(TAG, "[1-Wire] %d: %s", devices_found, rom_code_s);
         device_rom_codes[devices_found] = search_state.rom_code;
-        sensor_pub_topics[devices_found] = create_topic_from_address(rom_code_s);
+
+        strcpy(sensors[devices_found].address, rom_code_s);
+        sensors[devices_found].topic = create_topic_from_address(rom_code_s);
 
         ++devices_found;
         owb_search_next(owb, &search_state, &found);
@@ -178,7 +240,7 @@ void onewire_poll(void)
                 ++errors_count[i];
             }
 
-            ESP_LOGI(TAG, "[1-Wire] %s: %.1fC, %d errors", sensor_pub_topics[i], readings[i], errors_count[i]);
+            ESP_LOGI(TAG, "[1-Wire] %s: %.1fC, %d errors", sensors[i].topic, readings[i], errors_count[i]);
         }
 
         // VT: NOTE: This call will block and make parallel processing impossible
@@ -194,7 +256,7 @@ static esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event)
     switch (event->event_id) {
     case MQTT_EVENT_CONNECTED:
         ESP_LOGI(TAG, "[mqtt] connected to %s", CONFIG_BROKER_URL);
-        msg_id = esp_mqtt_client_publish(client, edge_pub_topic, device_id, 0, 1, 0);
+        msg_id = esp_mqtt_client_publish(client, edge_pub_topic, mqtt_hello, 0, 1, 0);
         ESP_LOGI(TAG, "sent publish successful, msg_id=%d", msg_id);
 
         msg_id = esp_mqtt_client_subscribe(client, "/topic/qos0", 0);
