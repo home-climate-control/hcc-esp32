@@ -46,7 +46,7 @@ OneWireBus *owb;
 int devices_found = 0;
 DS18B20_Info *devices[MAX_DEVICES] = {0};
 
-static void log_configuration(void)
+void log_configuration(void)
 {
     ESP_LOGI(TAG, "[conf] MQTT broker: %s", CONFIG_BROKER_URL);
     ESP_LOGI(TAG, "[conf] MQTT pub root: %s", CONFIG_BROKER_PUB_ROOT);
@@ -55,7 +55,7 @@ static void log_configuration(void)
     ESP_LOGI(TAG, "[conf] 1-Wire sampling interval: %ds", CONFIG_ONE_WIRE_POLL_SECONDS);
 }
 
-static void onewire_start(void)
+void onewire_start(void)
 {
     // To debug OWB, use 'make menuconfig' to set default Log level to DEBUG, then uncomment:
     //esp_log_level_set("owb", ESP_LOG_DEBUG);
@@ -104,7 +104,7 @@ static void onewire_start(void)
     }
 }
 
-static void onewire_poll(void)
+void onewire_poll(void)
 {
     // Read temperatures more efficiently by starting conversions on all devices at the same time
     int errors_count[MAX_DEVICES] = {0};
@@ -199,7 +199,7 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
     mqtt_event_handler_cb(event_data);
 }
 
-static void mqtt_start(void)
+void mqtt_start(void)
 {
     esp_mqtt_client_config_t mqtt_cfg = {
         .uri = CONFIG_BROKER_URL,
