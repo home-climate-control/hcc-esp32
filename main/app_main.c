@@ -209,6 +209,32 @@ void onewire_start(void)
     }
 }
 
+void mqtt_send_sample(int offset, float signal) {
+
+    // VT: NOTE: For now, we just have temperature sensors, this may change in the future
+    char signature[strlen(sensors[offset].address) + 2];
+    strcpy((char *)&signature[0], "T");
+    strcpy((char *)&signature[1], sensors[offset].address);
+
+    cJSON* json_root = cJSON_CreateObject();
+    cJSON_AddItemToObject(json_root, "entityType", cJSON_CreateString("sensor"));
+    cJSON_AddItemToObject(json_root, "name", cJSON_CreateString(sensors[offset].address));
+    cJSON_AddItemToObject(json_root, "signature", cJSON_CreateString(signature));
+    cJSON_AddNumberToObject(json_root, "signal", signal);
+    cJSON_AddItemToObject(json_root, "deviceId", cJSON_CreateString(device_id));
+
+    char *message = cJSON_PrintUnformatted(json_root);
+    ESP_LOGI(TAG, "[mqtt] %s %s", sensors[offset].topic, message);
+
+    // VT: FIXME: send the message to MQTT here
+    // ...
+
+    free(message);
+
+    cJSON_Delete(json_root);
+
+}
+
 void onewire_poll(void)
 {
     // Read temperatures more efficiently by starting conversions on all devices at the same time
@@ -230,17 +256,20 @@ void onewire_poll(void)
         float readings[MAX_DEVICES] = { 0 };
         DS18B20_ERROR errors[MAX_DEVICES] = { 0 };
 
-        for (int i = 0; i < devices_found; ++i) {
-            errors[i] = ds18b20_read_temp(devices[i], &readings[i]);
+        for (int offset = 0; offset < devices_found; ++offset) {
+            errors[offset] = ds18b20_read_temp(devices[offset], &readings[offset]);
         }
 
-        // Print results in a separate loop, after all have been read
-        for (int i = 0; i < devices_found; ++i) {
-            if (errors[i] != DS18B20_OK) {
-                ++errors_count[i];
+        // Report results in a separate loop, after all have been read
+        for (int offset = 0; offset < devices_found; ++offset) {
+            if (errors[offset] != DS18B20_OK) {
+                // VT: NOTE: What exactly does the error count indicate here? Need to RTFM again.
+                ++errors_count[offset];
             }
 
-            ESP_LOGI(TAG, "[1-Wire] %s: %.1fC, %d errors", sensors[i].topic, readings[i], errors_count[i]);
+            ESP_LOGI(TAG, "[1-Wire] %s: %.1fC, %d errors", sensors[offset].topic, readings[offset], errors_count[offset]);
+
+            mqtt_send_sample(offset, readings[offset]);
         }
 
         // VT: NOTE: This call will block and make parallel processing impossible
