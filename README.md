@@ -5,6 +5,10 @@ This application connects to WiFi, then to the MQTT broker, introduces itself an
 
 All configuration parameteres are selected using `idf.py menuconfiig`.
 
+## Project Status
+
+Early access. "Release early, release often". Right now, this project provides functionality identical to [hcc-esp8266](https://github.com/home-climate-control/hcc-esp8266), but on ESP-IDF as opposed to Arduino. More moving pieces, but more power early on. [Bug reports are welcome](https://github.com/home-climate-control/hcc-esp32/issues).
+
 ## How to use this application
 
 ### Prerequisites
