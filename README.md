@@ -15,7 +15,7 @@ All configuration parameteres are selected using `idf.py menuconfiig`.
 
 ### Hardware Required
 
-- This application can be executed on any ESP32 board, the only required interfaces are GPIO WiFi;
+- This application can be executed on any ESP32 board, the only required interfaces are GPIO and WiFi;
 - [1-Wire](https://en.wikipedia.org/wiki/1-Wire) sensors. The only one supported right now is [DS18B20](https://www.maximintegrated.com/en/products/sensors/healthcare-sensor-ics/electrochemical-sensor-afe-ics/DS18B20.html) ([family 0x28](http://owfs.sourceforge.net/family.html)), more to come ([request support here](https://groups.google.com/forum/#!msg/home-climate-control/) if you want it earlier). [Beware of counterfeits](https://github.com/cpetrich/counterfeit_DS18B20).
 
 ### Configure the project
