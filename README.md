@@ -40,7 +40,7 @@ idf.py -p PORT flash monitor
 The output is duplicated on the serial console and in MQTT output stream.
 
 ```
-/hcc/edge {"entityType":"sensor","deviceId":"ESP32-246F28A7C53C","sources":["D90301A2792B0528","E40300A27970F728"]}
-/hcc/sensor/28C06879A20003CE {"entity_type":"sensor","name":"28C06879A20003CE","signature":"T28C06879A20003CE","signal":32.13,"device_id":"ESP8266-00621CC5"}
-/hcc/sensor/289E0279A201039B {"entity_type":"sensor","name":"289E0279A201039B","signature":"T289E0279A201039B","signal":41.63,"device_id":"ESP8266-00621CC5"}
+/hcc/edge {"entity_type":"sensor","device_id":"ESP32-246F28A7C53C","sources":["D90301A2792B0528","E40300A27970F728"]}
+/hcc/sensor/D90301A2792B0528 {"entity_type":"sensor","name":"D90301A2792B0528","signature":"TD90301A2792B0528","signal":24.625,"device_id":"ESP32-246F28A7C53C"}
+/hcc/sensor/E40300A27970F728 {"entity_type":"sensor","name":"E40300A27970F728","signature":"TE40300A27970F728","signal":26.1875,"device_id":"ESP32-246F28A7C53C"}
 ```
