@@ -99,8 +99,8 @@ void log_configuration(void)
 void create_hello() {
 
     cJSON* json_root = cJSON_CreateObject();
-    cJSON_AddItemToObject(json_root, "entityType", cJSON_CreateString("sensor"));
-    cJSON_AddItemToObject(json_root, "deviceId", cJSON_CreateString(device_id));
+    cJSON_AddItemToObject(json_root, "entity_type", cJSON_CreateString("sensor"));
+    cJSON_AddItemToObject(json_root, "device_id", cJSON_CreateString(device_id));
 
     const char* sources[devices_found];
     for (int offset = 0; offset < devices_found; offset++) {
@@ -217,11 +217,11 @@ void mqtt_send_sample(int offset, float signal) {
     strcpy((char *)&signature[1], sensors[offset].address);
 
     cJSON* json_root = cJSON_CreateObject();
-    cJSON_AddItemToObject(json_root, "entityType", cJSON_CreateString("sensor"));
+    cJSON_AddItemToObject(json_root, "entity_type", cJSON_CreateString("sensor"));
     cJSON_AddItemToObject(json_root, "name", cJSON_CreateString(sensors[offset].address));
     cJSON_AddItemToObject(json_root, "signature", cJSON_CreateString(signature));
     cJSON_AddNumberToObject(json_root, "signal", signal);
-    cJSON_AddItemToObject(json_root, "deviceId", cJSON_CreateString(device_id));
+    cJSON_AddItemToObject(json_root, "device_id", cJSON_CreateString(device_id));
 
     char *message = cJSON_PrintUnformatted(json_root);
     ESP_LOGI(TAG, "[mqtt] %s %s", sensors[offset].topic, message);
