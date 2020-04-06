@@ -74,6 +74,8 @@ struct sensor_sample {
     const char *device_id;
 };
 
+esp_mqtt_client_handle_t mqtt_client;
+
 void log_configuration(void)
 {
     ESP_LOGI(TAG, "[conf] MQTT broker: %s", CONFIG_BROKER_URL);
@@ -211,23 +213,25 @@ void onewire_start(void)
 
 void mqtt_send_sample(int offset, float signal) {
 
+    sensor s = sensors[offset];
+
     // VT: NOTE: For now, we just have temperature sensors, this may change in the future
-    char signature[strlen(sensors[offset].address) + 2];
+    char signature[strlen(s.address) + 2];
     strcpy((char *)&signature[0], "T");
-    strcpy((char *)&signature[1], sensors[offset].address);
+    strcpy((char *)&signature[1], s.address);
 
     cJSON* json_root = cJSON_CreateObject();
     cJSON_AddItemToObject(json_root, "entity_type", cJSON_CreateString("sensor"));
-    cJSON_AddItemToObject(json_root, "name", cJSON_CreateString(sensors[offset].address));
+    cJSON_AddItemToObject(json_root, "name", cJSON_CreateString(s.address));
     cJSON_AddItemToObject(json_root, "signature", cJSON_CreateString(signature));
     cJSON_AddNumberToObject(json_root, "signal", signal);
     cJSON_AddItemToObject(json_root, "device_id", cJSON_CreateString(device_id));
 
     char *message = cJSON_PrintUnformatted(json_root);
-    ESP_LOGI(TAG, "[mqtt] %s %s", sensors[offset].topic, message);
+    ESP_LOGI(TAG, "[mqtt] %s %s", s.topic, message);
 
-    // VT: FIXME: send the message to MQTT here
-    // ...
+    int msg_id = esp_mqtt_client_publish(mqtt_client, s.topic, message, 0, 1, 0);
+    ESP_LOGI(TAG, "sent publish successful, msg_id=%d", msg_id);
 
     free(message);
 
@@ -339,9 +343,9 @@ void mqtt_start(void)
         .uri = CONFIG_BROKER_URL,
     };
 
-    esp_mqtt_client_handle_t client = esp_mqtt_client_init(&mqtt_cfg);
-    esp_mqtt_client_register_event(client, ESP_EVENT_ANY_ID, mqtt_event_handler, client);
-    esp_mqtt_client_start(client);
+    mqtt_client = esp_mqtt_client_init(&mqtt_cfg);
+    esp_mqtt_client_register_event(mqtt_client, ESP_EVENT_ANY_ID, mqtt_event_handler, mqtt_client);
+    esp_mqtt_client_start(mqtt_client);
 }
 
 void app_main(void)
