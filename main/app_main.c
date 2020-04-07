@@ -51,24 +51,24 @@ DS18B20_Info *devices[MAX_DEVICES] = {0};
 
 typedef struct sensor_t {
     char address[17];
-    char* topic;
+    char *topic;
 } sensor;
 
 char device_id[19];
-char* edge_pub_topic;
-char* mqtt_hello = "NO HELLO";
+char *edge_pub_topic;
+char *mqtt_hello = "NO HELLO";
 sensor sensors[MAX_DEVICES] = {0};
 
 struct hello {
-    const char* entity_type;
-    const char* device_id;
-    const char* sources[];
+    const char *entity_type;
+    const char *device_id;
+    const char *sources[];
 };
 
 struct sensor_sample {
-    const char* entity_type;
-    const char* name;
-    const char* signature;
+    const char *entity_type;
+    const char *name;
+    const char *signature;
     const float signal;
     const long timestamp;
     const char *device_id;
@@ -98,18 +98,19 @@ void log_configuration(void)
  *  ]
  * }
  */
-void create_hello() {
+void create_hello()
+{
 
-    cJSON* json_root = cJSON_CreateObject();
+    cJSON *json_root = cJSON_CreateObject();
     cJSON_AddItemToObject(json_root, "entity_type", cJSON_CreateString("sensor"));
     cJSON_AddItemToObject(json_root, "device_id", cJSON_CreateString(device_id));
 
-    const char* sources[devices_found];
+    const char *sources[devices_found];
     for (int offset = 0; offset < devices_found; offset++) {
         sources[offset] = (char *) &sensors[offset].address;
     }
 
-    cJSON* json_sources = cJSON_CreateStringArray(sources, devices_found);
+    cJSON *json_sources = cJSON_CreateStringArray(sources, devices_found);
     cJSON_AddItemToObject(json_root, "sources", json_sources);
 
     // VT: NOTE: Careful, this allocates memory, need to delete it if we're going to re-render it
@@ -123,7 +124,8 @@ void create_hello() {
  * Sets device_id to "ESP32-${esp_read_mac()}";
  * Sets edge_pub_topic to "{@CONFIG_BROKER_PUB_ROOT}/edge/".
  */
-void create_identity() {
+void create_identity()
+{
 
     uint8_t id[6] = {0};
     ESP_ERROR_CHECK(esp_read_mac(id, ESP_MAC_WIFI_STA));
@@ -144,9 +146,10 @@ void create_identity() {
 /**
  * Allocates memory and returns the sensor topic rendered as "${CONFIG_BROKER_PUB_ROOT}/sensor/${ADDRESS}"
  */
-char* create_topic_from_address(const char *address) {
+char *create_topic_from_address(const char *address)
+{
 
-    const char* sensor = "/sensor/";
+    const char *sensor = "/sensor/";
     int bufsize = strlen(CONFIG_BROKER_PUB_ROOT) + strlen(sensor) + strlen(address) + 1;
     char *result = (char *) malloc(bufsize);
 
@@ -211,7 +214,8 @@ void onewire_start(void)
     }
 }
 
-void mqtt_send_sample(int offset, float signal) {
+void mqtt_send_sample(int offset, float signal)
+{
 
     sensor s = sensors[offset];
 
@@ -220,7 +224,7 @@ void mqtt_send_sample(int offset, float signal) {
     strcpy((char *)&signature[0], "T");
     strcpy((char *)&signature[1], s.address);
 
-    cJSON* json_root = cJSON_CreateObject();
+    cJSON *json_root = cJSON_CreateObject();
     cJSON_AddItemToObject(json_root, "entity_type", cJSON_CreateString("sensor"));
     cJSON_AddItemToObject(json_root, "name", cJSON_CreateString(s.address));
     cJSON_AddItemToObject(json_root, "signature", cJSON_CreateString(signature));
