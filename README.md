@@ -19,7 +19,8 @@ Early access. "Release early, release often". Right now, this project provides f
 
 ### Hardware Required
 
-- This application can be executed on any ESP32 board, the only required interfaces are GPIO and WiFi;
+- This application can be executed on any ESP32 board, the only required interfaces are GPIO and WiFi.
+- For development, [Adafruit HUZZAH32](https://www.adafruit.com/product/3619) is used, reason being - it features 1S LiPo battery connector and charger. Given the fact that the devices being developed will be most likey remote and wireless, this is a serious advantage. YMMV.
 - [1-Wire](https://en.wikipedia.org/wiki/1-Wire) sensors. The only one supported right now is [DS18B20](https://www.maximintegrated.com/en/products/sensors/healthcare-sensor-ics/electrochemical-sensor-afe-ics/DS18B20.html) ([family 0x28](http://owfs.sourceforge.net/family.html)), more to come ([request support here](https://groups.google.com/forum/#!msg/home-climate-control/) if you want it earlier). [Beware of counterfeits](https://github.com/cpetrich/counterfeit_DS18B20).
 
 ### Configure the project
