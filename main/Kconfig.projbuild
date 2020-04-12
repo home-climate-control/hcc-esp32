@@ -315,6 +315,59 @@ menu "hcc-esp32 Configuration"
                 Note that usually RST and SLP pins are connected together, so you will have to figure out how to pull RST high.
                 Some GPIOs are used for other purposes (flash connections, etc.) and cannot be used.
                 GPIOs 35-39 are input-only so cannot be used to control A4988.
+
+        config HCC_ESP32_A4988_LIMIT_SWITCH_ENABLE
+            depends on HCC_ESP32_A4988_ENABLE
+            bool "Enable limit switch"
+            default n
+            help
+                When this switch is enabled, one additional GPIOs is required, but it becomes possible to use a limit switch.
+
+        config HCC_ESP32_A4988_PIN_LIMIT
+            depends on HCC_ESP32_A4988_LIMIT_SWITCH_ENABLE
+            int "Limit switch GPIO number"
+            range 13 39
+            default 34
+            help
+                GPIO number (IOxx) to connect the limit switch to.
+                Some GPIOs are used for other purposes (flash connections, etc.) and cannot be used.
+                OGPIOs 35-39 are input-only so cannot be used to control A4988.
+
+        choice HCC_ESP32_A4988_LIMIT_DIRECTION
+            depends on HCC_ESP32_A4988_LIMIT_SWITCH_ENABLE
+            bool "Direction to the limit switch"
+            help
+                Choose which direction the stepper travels to the limit switch.
+
+        config HCC_ESP32_A4988_LIMIT_UP
+            bool "Up"
+            help
+                Stepper goes up to hit the limit switch.
+
+        config HCC_ESP32_A4988_LIMIT_DOWN
+            bool "Down"
+            help
+                Stepper goes down to hit the limit switch.
+        endchoice
+
+        config HCC_ESP32_A4988_LIMIT_DIRECTION
+            int
+            default 1 if HCC_ESP32_A4988_LIMIT_UP
+            default -1 if HCC_ESP32_A4988_LIMIT_DOWN
+
+        config HCC_ESP32_A4988_FAILSAFE_ENABLE
+            depends on HCC_ESP32_A4988_LIMIT_SWITCH_ENABLE
+            bool "Enable failsafe position"
+            default n
+            help
+                When this switch is enabled, the stepper will travel to the limit switch on boot,
+                then back to the specified position.
+
+        config HCC_ESP32_A4988_FAILSAFE_POSITION
+            depends on HCC_ESP32_A4988_FAILSAFE_ENABLE
+            int "Failsafe position"
+            help
+                The stepper will travel to the limit switch on boot, then come back to this position.
     endmenu
 
 endmenu
