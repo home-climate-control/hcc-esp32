@@ -229,4 +229,91 @@ menu "hcc-esp32 Configuration"
 
     endmenu
 
+    menu "A4988 Stepper Driver"
+
+        config HCC_ESP32_A4988_ENABLE
+            bool "Enable A4988 stepper driver"
+            default y
+
+        config HCC_ESP32_A4988_PIN_DIR
+            depends on HCC_ESP32_A4988_ENABLE
+            int "DIR GPIO pin"
+            range 0 34
+            default 26
+            help
+                GPIO pin (IOxx) to connect to A4988 pin 8 (DIR).
+                Some GPIOs are used for other purposes (flash connections, etc.) and cannot be used.
+                GPIOs 35-39 are input-only so cannot be used to control A4988.
+
+        config HCC_ESP32_A4988_PIN_STEP
+            depends on HCC_ESP32_A4988_ENABLE
+            int "STEP GPIO pin"
+            range 0 34
+            default 25
+            help
+                GPIO pin (IOxx) to connect to A4988 pin 7 (STEP).
+                Some GPIOs are used for other purposes (flash connections, etc.) and cannot be used.
+                GPIOs 35-39 are input-only so cannot be used to control A4988.
+
+        config HCC_ESP32_A4988_MICROSTEPPING
+            depends on HCC_ESP32_A4988_ENABLE
+            bool "Enable microstepping"
+            default y
+            help
+                When this switch is enabled, three additional GPIO pins are required, but it becomes possible to use microstepping.
+                Leaving MSx pins disconnected will make the driver operate in full step mode.
+                Some GPIOs are used for other purposes (flash connections, etc.) and cannot be used.
+                GPIOs 35-39 are input-only so cannot be used to control A4988.
+
+        config HCC_ESP32_A4988_PIN_MS1
+            depends on HCC_ESP32_A4988_MICROSTEPPING
+            int "MS1 GPIO pin"
+            range 0 34
+            default 14
+            help
+                GPIO pin (IOxx) to connect to A4988 pin 2 (MS1).
+                Some GPIOs are used for other purposes (flash connections, etc.) and cannot be used.
+                GPIOs 35-39 are input-only so cannot be used to control A4988.
+
+        config HCC_ESP32_A4988_PIN_MS2
+            depends on HCC_ESP32_A4988_MICROSTEPPING
+            int "MS2 GPIO pin"
+            range 0 34
+            default 32
+            help
+                GPIO pin (IOxx) to connect to A4988 pin 3 (MS2).
+                Some GPIOs are used for other purposes (flash connections, etc.) and cannot be used.
+                GPIOs 35-39 are input-only so cannot be used to control A4988.
+
+        config HCC_ESP32_A4988_PIN_MS3
+            depends on HCC_ESP32_A4988_MICROSTEPPING
+            int "MS3 GPIO pin"
+            range 0 34
+            default 15
+            help
+                GPIO pin (IOxx) to connect to A4988 pin 4 (MS3).
+                Some GPIOs are used for other purposes (flash connections, etc.) and cannot be used.
+                GPIOs 35-39 are input-only so cannot be used to control A4988.
+
+        config HCC_ESP32_A4988_POWERSAVE
+            depends on HCC_ESP32_A4988_ENABLE
+            bool "Enable power saving features"
+            default n
+            help
+                When this switch is enabled, one additional GPIO pin is required, but it becomes possible to use power saving features.
+
+        config HCC_ESP32_A4988_PIN_SLP
+            depends on HCC_ESP32_A4988_POWERSAVE
+            int "SLP GPIO pin"
+            range 0 34
+            default 33
+            help
+                GPIO pin (IOxx) to connect to A4988 pin 6 (SLP).
+                Note that usually RST and SLP pins are connected together, so you will have to figure out how to pull RST high.
+                Some GPIOs are used for other purposes (flash connections, etc.) and cannot be used.
+                GPIOs 35-39 are input-only so cannot be used to control A4988.
+
+
+    endmenu
+
 endmenu
