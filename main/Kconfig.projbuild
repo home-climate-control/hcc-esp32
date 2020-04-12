@@ -208,7 +208,12 @@ menu "hcc-esp32 Configuration"
 
     menu "1-Wire"
 
+        config HCC_ESP32_ONE_WIRE_ENABLE
+            bool "Enable 1-Wire device support"
+            default y
+
         config ONE_WIRE_GPIO
+            depends on HCC_ESP32_ONE_WIRE_ENABLE
             int "1-Wire GPIO number"
             range 0 34
             default 4
@@ -218,6 +223,7 @@ menu "hcc-esp32 Configuration"
                 GPIOs 35-39 are input-only so cannot be used to drive the One Wire Bus.
 
         config ONE_WIRE_POLL_SECONDS
+            depends on HCC_ESP32_ONE_WIRE_ENABLE
             int "1-Wire bus poll interval"
             range 1 300
             default 10
@@ -230,7 +236,7 @@ menu "hcc-esp32 Configuration"
 
         config HCC_ESP32_A4988_ENABLE
             bool "Enable A4988 stepper driver"
-            default y
+            default n
 
         config HCC_ESP32_A4988_PIN_DIR
             depends on HCC_ESP32_A4988_ENABLE

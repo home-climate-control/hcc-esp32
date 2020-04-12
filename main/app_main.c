@@ -76,13 +76,64 @@ struct sensor_sample {
 
 esp_mqtt_client_handle_t mqtt_client;
 
+void log_component_setup() {
+#ifdef CONFIG_HCC_ESP32_ONE_WIRE_ENABLE
+    ESP_LOGI(TAG, "[conf/component] 1-Wire: enabled");
+#else
+    ESP_LOGI(TAG, "[conf/component] 1-Wire: DISABLED");
+#endif
+
+#ifdef CONFIG_HCC_ESP32_A4988_ENABLE
+    ESP_LOGI(TAG, "[conf/component] A4988:  enabled");
+#else
+    ESP_LOGI(TAG, "[conf/component] A4988:  DISABLED");
+#endif
+}
+
+void log_onewire_configuration() {
+#ifdef CONFIG_HCC_ESP32_ONE_WIRE_ENABLE
+
+    ESP_LOGI(TAG, "[conf/1-Wire] GPIO pin: %d", CONFIG_ONE_WIRE_GPIO);
+    ESP_LOGI(TAG, "[conf/1-Wire] sampling interval: %ds", CONFIG_ONE_WIRE_POLL_SECONDS);
+
+    #endif
+}
+
+void log_a4988_configuration() {
+#ifdef CONFIG_HCC_ESP32_A4988_ENABLE
+
+    ESP_LOGI(TAG, "[conf/A4988] DIR pin:  %d", CONFIG_HCC_ESP32_A4988_PIN_DIR);
+    ESP_LOGI(TAG, "[conf/A4988] STEP pin: %d", CONFIG_HCC_ESP32_A4988_PIN_STEP);
+
+#ifdef CONFIG_HCC_ESP32_A4988_MICROSTEPPING
+    ESP_LOGI(TAG, "[conf/A4988] microstepping enabled");
+    ESP_LOGI(TAG, "[conf/A4988] MS1 pin:  %d", CONFIG_HCC_ESP32_A4988_PIN_MS1);
+    ESP_LOGI(TAG, "[conf/A4988] MS2 pin:  %d", CONFIG_HCC_ESP32_A4988_PIN_MS2);
+    ESP_LOGI(TAG, "[conf/A4988] MS3 pin:  %d", CONFIG_HCC_ESP32_A4988_PIN_MS3);
+#else
+    ESP_LOGI(TAG, "[conf/A4988] microstepping disabled");
+#endif
+
+#ifdef CONFIG_HCC_ESP32_A4988_POWERSAVE
+    ESP_LOGI(TAG, "[conf/A4988] power save enabled");
+    ESP_LOGI(TAG, "[conf/A4988] SLP pin:  %d", CONFIG_HCC_ESP32_A4988_PIN_SLP);
+#else
+    ESP_LOGI(TAG, "[conf/A4988] power save disabled");
+#endif
+
+#endif
+}
+
 void log_configuration(void)
 {
-    ESP_LOGI(TAG, "[conf] MQTT broker: %s", CONFIG_BROKER_URL);
-    ESP_LOGI(TAG, "[conf] MQTT pub root: %s", CONFIG_BROKER_PUB_ROOT);
-    ESP_LOGI(TAG, "[conf] MQTT sub root: %s", CONFIG_BROKER_SUB_ROOT);
-    ESP_LOGI(TAG, "[conf] 1-Wire GPIO pin: %d", CONFIG_ONE_WIRE_GPIO);
-    ESP_LOGI(TAG, "[conf] 1-Wire sampling interval: %ds", CONFIG_ONE_WIRE_POLL_SECONDS);
+    log_component_setup();
+
+    ESP_LOGI(TAG, "[conf/MQTT] broker: %s", CONFIG_BROKER_URL);
+    ESP_LOGI(TAG, "[conf/MQTT] pub root: %s", CONFIG_BROKER_PUB_ROOT);
+    ESP_LOGI(TAG, "[conf/MQTT] sub root: %s", CONFIG_BROKER_SUB_ROOT);
+
+    log_onewire_configuration();
+    log_a4988_configuration();
 }
 
 /**
@@ -162,6 +213,7 @@ char *create_topic_from_address(const char *address)
 
 void onewire_start(void)
 {
+#ifdef CONFIG_HCC_ESP32_ONE_WIRE_ENABLE
     // To debug OWB, use 'make menuconfig' to set default Log level to DEBUG, then uncomment:
     //esp_log_level_set("owb", ESP_LOG_DEBUG);
 
@@ -212,6 +264,7 @@ void onewire_start(void)
         ds18b20_use_crc(ds18b20_info, true);
         ds18b20_set_resolution(ds18b20_info, DS18B20_RESOLUTION);
     }
+#endif
 }
 
 void mqtt_send_sample(int offset, float signal)
@@ -245,6 +298,7 @@ void mqtt_send_sample(int offset, float signal)
 
 void onewire_poll(void)
 {
+#ifdef CONFIG_HCC_ESP32_ONE_WIRE_ENABLE
     // Read temperatures more efficiently by starting conversions on all devices at the same time
     int errors_count[MAX_DEVICES] = {0};
 
@@ -283,6 +337,7 @@ void onewire_poll(void)
         // VT: NOTE: This call will block and make parallel processing impossible
         vTaskDelayUntil(&last_wake_time, SAMPLE_PERIOD_MILLIS / portTICK_PERIOD_MS);
     }
+#endif
 }
 
 static esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event)
