@@ -36,6 +36,9 @@
 
 #include "cJSON.h"
 
+#if !(CONFIG_HCC_ESP32_ONE_WIRE_ENABLE || CONFIG_HCC_ESP32_A4988_ENABLE)
+#error "No components enabled, configuration doesn't make sense. Run 'idf.py menuconfig' to enable."
+#endif
 
 #define GPIO_DS18B20_0       (CONFIG_ONE_WIRE_GPIO)
 #define MAX_DEVICES          (8)
