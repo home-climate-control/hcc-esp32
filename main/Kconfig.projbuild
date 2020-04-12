@@ -204,7 +204,6 @@ menu "hcc-esp32 Configuration"
             default "/edge"
             help
                 MQTT topic root to listen to commands on
-
     endmenu
 
     menu "1-Wire"
@@ -225,8 +224,6 @@ menu "hcc-esp32 Configuration"
             help
                 How often 1-Wire sensors need to be polled. 30 seconds is enough
                 for HVAC applications.
-
-
     endmenu
 
     menu "A4988 Stepper Driver"
@@ -312,8 +309,6 @@ menu "hcc-esp32 Configuration"
                 Note that usually RST and SLP pins are connected together, so you will have to figure out how to pull RST high.
                 Some GPIOs are used for other purposes (flash connections, etc.) and cannot be used.
                 GPIOs 35-39 are input-only so cannot be used to control A4988.
-
-
     endmenu
 
 endmenu
