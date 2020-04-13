@@ -79,7 +79,8 @@ struct sensor_sample {
 
 esp_mqtt_client_handle_t mqtt_client;
 
-void log_component_setup() {
+void log_component_setup()
+{
 #ifdef CONFIG_HCC_ESP32_ONE_WIRE_ENABLE
     ESP_LOGI(TAG, "[conf/component] 1-Wire: enabled");
 #else
@@ -93,16 +94,18 @@ void log_component_setup() {
 #endif
 }
 
-void log_onewire_configuration() {
+void log_onewire_configuration()
+{
 #ifdef CONFIG_HCC_ESP32_ONE_WIRE_ENABLE
 
     ESP_LOGI(TAG, "[conf/1-Wire] GPIO pin: %d", CONFIG_ONE_WIRE_GPIO);
     ESP_LOGI(TAG, "[conf/1-Wire] sampling interval: %ds", CONFIG_ONE_WIRE_POLL_SECONDS);
 
-    #endif
+#endif
 }
 
-void log_a4988_configuration() {
+void log_a4988_configuration()
+{
 #ifdef CONFIG_HCC_ESP32_A4988_ENABLE
 
     ESP_LOGI(TAG, "[conf/A4988] DIR pin:  %d", CONFIG_HCC_ESP32_A4988_PIN_DIR);
