@@ -59,8 +59,8 @@ typedef struct sensor_t {
 
 char device_id[19];
 char *edge_pub_topic;
-char *mqtt_hello = "NO HELLO";
-sensor sensors[MAX_DEVICES] = {0};
+char *mqtt_hello;
+sensor sensors[MAX_DEVICES] = {};
 
 struct hello {
     const char *entity_type;
@@ -234,8 +234,8 @@ void onewire_start(void)
 
     ESP_LOGI(TAG, "[1-Wire] looking for connected devices on pin %d...", GPIO_DS18B20_0);
 
-    OneWireBus_ROMCode device_rom_codes[MAX_DEVICES] = {0};
-    OneWireBus_SearchState search_state = {0};
+    OneWireBus_ROMCode device_rom_codes[MAX_DEVICES] = {};
+    OneWireBus_SearchState search_state = {};
     bool found = false;
     owb_search_first(owb, &search_state, &found);
     while (found) {
@@ -322,7 +322,7 @@ void onewire_poll(void)
         // Read the results immediately after conversion otherwise it may fail
         // (using printf before reading may take too long)
         float readings[MAX_DEVICES] = { 0 };
-        DS18B20_ERROR errors[MAX_DEVICES] = { 0 };
+        DS18B20_ERROR errors[MAX_DEVICES] = {};
 
         for (int offset = 0; offset < devices_found; ++offset) {
             errors[offset] = ds18b20_read_temp(devices[offset], &readings[offset]);
@@ -399,21 +399,20 @@ static esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event)
 static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data)
 {
     ESP_LOGD(TAG, "Event dispatched from event loop base=%s, event_id=%d", base, event_id);
-    mqtt_event_handler_cb(event_data);
+    mqtt_event_handler_cb((esp_mqtt_event_handle_t) event_data);
 }
 
 void mqtt_start(void)
 {
-    esp_mqtt_client_config_t mqtt_cfg = {
-        .uri = CONFIG_BROKER_URL,
-    };
+    esp_mqtt_client_config_t mqtt_cfg = {};
+    mqtt_cfg.uri = CONFIG_BROKER_URL;
 
     mqtt_client = esp_mqtt_client_init(&mqtt_cfg);
-    esp_mqtt_client_register_event(mqtt_client, ESP_EVENT_ANY_ID, mqtt_event_handler, mqtt_client);
+    esp_mqtt_client_register_event(mqtt_client, (esp_mqtt_event_id_t) ESP_EVENT_ANY_ID, mqtt_event_handler, mqtt_client);
     esp_mqtt_client_start(mqtt_client);
 }
 
-void app_main(void)
+extern "C" void app_main(void)
 {
     ESP_LOGI(TAG, "[core] Oh, hai");
     ESP_LOGI(TAG, "[core] free memory: %d bytes", esp_get_free_heap_size());
