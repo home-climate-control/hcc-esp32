@@ -36,6 +36,8 @@
 
 #include "cJSON.h"
 
+#include "stepper_api.h"
+
 #if !(CONFIG_HCC_ESP32_ONE_WIRE_ENABLE || CONFIG_HCC_ESP32_A4988_ENABLE)
 #error "No components enabled, configuration doesn't make sense. Run 'idf.py menuconfig' to enable."
 #endif
