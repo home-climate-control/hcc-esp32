@@ -42,12 +42,15 @@
 #error "No components enabled, configuration doesn't make sense. Run 'idf.py menuconfig' to enable."
 #endif
 
+static const char *TAG = "hcc-esp32";
+
+#ifdef CONFIG_HCC_ESP32_ONE_WIRE_ENABLE
+
 #define GPIO_DS18B20_0       (CONFIG_ONE_WIRE_GPIO)
 #define MAX_DEVICES          (8)
 #define DS18B20_RESOLUTION   (DS18B20_RESOLUTION_12_BIT)
 #define SAMPLE_PERIOD_MILLIS        (1000 * CONFIG_ONE_WIRE_POLL_SECONDS)
 
-static const char *TAG = "hcc-esp32";
 
 owb_rmt_driver_info rmt_driver_info;
 OneWireBus *owb;
@@ -59,10 +62,12 @@ typedef struct sensor_t {
     char *topic;
 } sensor;
 
+sensor sensors[MAX_DEVICES] = {};
+#endif
+
 char device_id[19];
 char *edge_pub_topic;
 char *mqtt_hello;
-sensor sensors[MAX_DEVICES] = {};
 
 struct hello {
     const char *entity_type;
@@ -164,12 +169,18 @@ void create_hello()
     cJSON_AddItemToObject(json_root, "entity_type", cJSON_CreateString("sensor"));
     cJSON_AddItemToObject(json_root, "device_id", cJSON_CreateString(device_id));
 
+#ifdef CONFIG_HCC_ESP32_ONE_WIRE_ENABLE
     const char *sources[devices_found];
     for (int offset = 0; offset < devices_found; offset++) {
         sources[offset] = (char *) &sensors[offset].address;
     }
 
     cJSON *json_sources = cJSON_CreateStringArray(sources, devices_found);
+#else
+    const char *sources[0];
+    cJSON *json_sources = cJSON_CreateStringArray(sources, 0);
+#endif
+
     cJSON_AddItemToObject(json_root, "sources", json_sources);
 
     // VT: NOTE: Careful, this allocates memory, need to delete it if we're going to re-render it
@@ -278,6 +289,8 @@ void onewire_start(void)
 void mqtt_send_sample(int offset, float signal)
 {
 
+#ifdef CONFIG_HCC_ESP32_ONE_WIRE_ENABLE
+
     sensor s = sensors[offset];
 
     // VT: NOTE: For now, we just have temperature sensors, this may change in the future
@@ -301,6 +314,10 @@ void mqtt_send_sample(int offset, float signal)
     free(message);
 
     cJSON_Delete(json_root);
+
+#else
+    ESP_LOGE(TAG, "1-Wire not enabled, not sending anything");
+#endif
 
 }
 
