@@ -16,6 +16,15 @@ menu "hcc-esp32 Configuration"
                 causes unwanted interference, or if you're running out of
                 GPIO pins.
 
+        config HCC_ESP32_FLASH_LED_GPIO
+            depends on HCC_ESP32_FLASH_LED
+            int "LED GPIO number"
+            range 0 33
+            default 13
+            help
+                GPIO number (IOxx) for the LED to blink.
+                Some GPIOs are used for other purposes (flash connections, etc.) and cannot be used.
+                GPIOs 34-39 are input-only so cannot be used to control A4988.
     endmenu
 
     menu "Connectivity"
@@ -258,16 +267,6 @@ menu "hcc-esp32 Configuration"
             help
                 How often 1-Wire sensors need to be polled. 30 seconds is enough
                 for HVAC applications.
-
-        config HCC_ESP32_FLASH_LED_GPIO
-            depends on HCC_ESP32_FLASH_LED
-            int "LED GPIO number"
-            range 0 33
-            default 13
-            help
-                GPIO number (IOxx) for the LED to blink.
-                Some GPIOs are used for other purposes (flash connections, etc.) and cannot be used.
-                GPIOs 34-39 are input-only so cannot be used to control A4988.
 
         config HCC_ESP32_FLASH_LED_MILLIS
             depends on HCC_ESP32_FLASH_LED
