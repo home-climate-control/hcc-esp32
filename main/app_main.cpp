@@ -96,6 +96,7 @@ void log_onewire_configuration()
 #ifdef CONFIG_HCC_ESP32_ONE_WIRE_ENABLE
 
     ESP_LOGI(TAG, "[conf/1-Wire] GPIO pin: %d", CONFIG_ONE_WIRE_GPIO);
+    ESP_LOGI(TAG, "[conf/1-Wire] max devices recognized: %d", CONFIG_HCC_ESP32_ONE_WIRE_MAX_DEVICES);
     ESP_LOGI(TAG, "[conf/1-Wire] sampling interval: %ds", CONFIG_ONE_WIRE_POLL_SECONDS);
 
 #endif
