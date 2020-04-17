@@ -22,6 +22,7 @@
 #include "freertos/task.h"
 #include "freertos/semphr.h"
 #include "freertos/queue.h"
+#include "driver/gpio.h"
 
 #include "lwip/sockets.h"
 #include "lwip/dns.h"
@@ -40,6 +41,8 @@
 #endif
 
 static const char *TAG = "hcc-esp32";
+
+#define GPIO_LED (gpio_num_t)(CONFIG_HCC_ESP32_ONE_WIRE_BLINK_GPIO)
 
 #ifdef CONFIG_HCC_ESP32_ONE_WIRE_ENABLE
 
@@ -362,6 +365,17 @@ void mqtt_start(void)
     esp_mqtt_client_start(mqtt_client);
 }
 
+void setLED(int state) {
+
+#ifdef CONFIG_HCC_ESP32_ONE_WIRE_BLINK
+
+    gpio_pad_select_gpio(GPIO_LED);
+    gpio_set_direction(GPIO_LED, GPIO_MODE_OUTPUT);
+    gpio_set_level(GPIO_LED, state);
+
+#endif
+}
+
 extern "C" void app_main(void)
 {
     ESP_LOGI(TAG, "[core] Oh, hai");
@@ -385,6 +399,7 @@ extern "C" void app_main(void)
     onewire_start();
     create_identity();
 
+    setLED(1);
     /* This helper function configures Wi-Fi or Ethernet, as selected in menuconfig.
      * Read "Establishing Wi-Fi or Ethernet Connection" section in
      * examples/protocols/README.md for more information about this function.
@@ -392,5 +407,8 @@ extern "C" void app_main(void)
     ESP_ERROR_CHECK(example_connect());
 
     mqtt_start();
+
+    setLED(0);
+
     onewire_poll();
 }
