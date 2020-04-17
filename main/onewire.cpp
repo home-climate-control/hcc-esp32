@@ -16,8 +16,6 @@ namespace hcc_onewire {
 #define DS18B20_RESOLUTION   (DS18B20_RESOLUTION_12_BIT)
 #define SAMPLE_PERIOD_MILLIS        (1000 * CONFIG_ONE_WIRE_POLL_SECONDS)
 
-#define GPIO_LED (gpio_num_t)(CONFIG_HCC_ESP32_FLASH_LED_GPIO)
-
 int OneWire::browse()
 {
 
@@ -30,12 +28,12 @@ int OneWire::browse()
     vTaskDelay(2000.0 / portTICK_PERIOD_MS);
 
     // Create a 1-Wire bus, using the RMT timeslot driver
-    owb = owb_rmt_initialize(&rmt_driver_info, gpio, RMT_CHANNEL_1, RMT_CHANNEL_0);
+    owb = owb_rmt_initialize(&rmt_driver_info, gpioOnewire, RMT_CHANNEL_1, RMT_CHANNEL_0);
 
     // enable CRC check for ROM code
     owb_use_crc(owb, true);
 
-    ESP_LOGI(TAG, "[1-Wire] looking for connected devices on pin %d...", gpio);
+    ESP_LOGI(TAG, "[1-Wire] looking for connected devices on pin %d...", gpioOnewire);
 
     OneWireBus_ROMCode device_rom_codes[CONFIG_HCC_ESP32_ONE_WIRE_MAX_DEVICES] = {};
     OneWireBus_SearchState search_state = {};
@@ -53,7 +51,7 @@ int OneWire::browse()
         ++devices_found;
         owb_search_next(owb, &search_state, &found);
     }
-    ESP_LOGI(TAG, "[1-Wire] found %d device%s on pin %d", devices_found, devices_found == 1 ? "" : "s", gpio);
+    ESP_LOGI(TAG, "[1-Wire] found %d device%s on pin %d", devices_found, devices_found == 1 ? "" : "s", gpioOnewire);
 
     // Create DS18B20 devices on the 1-Wire bus
     for (int i = 0; i < devices_found; ++i) {
@@ -81,22 +79,22 @@ int OneWire::browse()
 /**
  * Turn the LED on for the time specified in menuconfig, then turn it off.
  */
-void flashLED()
+void OneWire::flashLED()
 {
 
-#ifdef CONFIG_HCC_ESP32_FLASH_LED
+    if (gpioLED == GPIO_NUM_NC) {
+        return;
+    }
 
-    gpio_pad_select_gpio(GPIO_LED);
-    gpio_set_direction(GPIO_LED, GPIO_MODE_OUTPUT);
+    gpio_pad_select_gpio(gpioLED);
+    gpio_set_direction(gpioLED, GPIO_MODE_OUTPUT);
 
-    gpio_set_level(GPIO_LED, 1);
+    gpio_set_level(gpioLED, 1);
 
-    const TickType_t delayMillis = CONFIG_HCC_ESP32_FLASH_LED_MILLIS / portTICK_PERIOD_MS;
+    const TickType_t delayMillis = flashMillis / portTICK_PERIOD_MS;
     vTaskDelay( delayMillis );
 
-    gpio_set_level(GPIO_LED, 0);
-
-#endif
+    gpio_set_level(gpioLED, 0);
 }
 
 std::vector<float> OneWire::poll()

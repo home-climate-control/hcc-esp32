@@ -42,11 +42,15 @@
 
 static const char *TAG = "hcc-esp32";
 
+#ifdef CONFIG_HCC_ESP32_FLASH_LED
 #define GPIO_LED (gpio_num_t)(CONFIG_HCC_ESP32_FLASH_LED_GPIO)
+#else
+#define GPIO_LED GPIO_NUM_NC
+#define CONFIG_HCC_ESP32_FLASH_LED_MILLIS 0
+#endif
 
 #ifdef CONFIG_HCC_ESP32_ONE_WIRE_ENABLE
-
-hcc_onewire::OneWire oneWire(TAG, CONFIG_ONE_WIRE_GPIO);
+hcc_onewire::OneWire oneWire(TAG, (gpio_num_t)CONFIG_ONE_WIRE_GPIO, GPIO_LED, CONFIG_HCC_ESP32_FLASH_LED_MILLIS);
 
 #define SAMPLE_PERIOD_MILLIS (1000 * CONFIG_ONE_WIRE_POLL_SECONDS)
 
