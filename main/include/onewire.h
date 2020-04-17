@@ -23,7 +23,17 @@ private:
     /**
      * GPIO number to use to drive the 1-Wire bus.
      */
-    int gpio;
+    gpio_num_t gpioOnewire;
+
+    /**
+     * GPIO number to use to flash the LED. Use {@code GPIO_NUM_NC} to disable.
+     */
+    gpio_num_t gpioLED;
+
+    /**
+     * Flash the LED for this many milliseconds.
+     */
+    long flashMillis;
 
     // Initialized in browse()
     owb_rmt_driver_info rmt_driver_info;
@@ -39,12 +49,22 @@ private:
      */
     int devicesFound = -1;
 
+
+    void flashLED();
+
 public:
 
-    OneWire(const char *TAG, int gpio)
+    /**
+     * Create an instance.
+     *
+     * Specify {@code gpioLED} as {@code GPIO_NUM_NC} if you don't want to flash the LED.
+     */
+    OneWire(const char *TAG, gpio_num_t gpioOnewire, gpio_num_t gpioLED, long flashMillis)
     {
         this->TAG = TAG;
-        this->gpio = gpio;
+        this->gpioOnewire = gpioOnewire;
+        this->gpioLED = gpioLED;
+        this->flashMillis = flashMillis;
     }
 
     /**

@@ -22,6 +22,7 @@
 #include "freertos/task.h"
 #include "freertos/semphr.h"
 #include "freertos/queue.h"
+#include "driver/gpio.h"
 
 #include "lwip/sockets.h"
 #include "lwip/dns.h"
@@ -41,9 +42,15 @@
 
 static const char *TAG = "hcc-esp32";
 
-#ifdef CONFIG_HCC_ESP32_ONE_WIRE_ENABLE
+#ifdef CONFIG_HCC_ESP32_FLASH_LED
+#define GPIO_LED (gpio_num_t)(CONFIG_HCC_ESP32_FLASH_LED_GPIO)
+#else
+#define GPIO_LED GPIO_NUM_NC
+#define CONFIG_HCC_ESP32_FLASH_LED_MILLIS 0
+#endif
 
-hcc_onewire::OneWire oneWire(TAG, CONFIG_ONE_WIRE_GPIO);
+#ifdef CONFIG_HCC_ESP32_ONE_WIRE_ENABLE
+hcc_onewire::OneWire oneWire(TAG, (gpio_num_t)CONFIG_ONE_WIRE_GPIO, GPIO_LED, CONFIG_HCC_ESP32_FLASH_LED_MILLIS);
 
 #define SAMPLE_PERIOD_MILLIS (1000 * CONFIG_ONE_WIRE_POLL_SECONDS)
 
@@ -96,7 +103,12 @@ void log_onewire_configuration()
 #ifdef CONFIG_HCC_ESP32_ONE_WIRE_ENABLE
 
     ESP_LOGI(TAG, "[conf/1-Wire] GPIO pin: %d", CONFIG_ONE_WIRE_GPIO);
+    ESP_LOGI(TAG, "[conf/1-Wire] max devices recognized: %d", CONFIG_HCC_ESP32_ONE_WIRE_MAX_DEVICES);
     ESP_LOGI(TAG, "[conf/1-Wire] sampling interval: %ds", CONFIG_ONE_WIRE_POLL_SECONDS);
+
+#ifdef CONFIG_HCC_ESP32_FLASH_LED
+    ESP_LOGI(TAG, "[conf/1-Wire] LED flash duration: %dms", CONFIG_HCC_ESP32_FLASH_LED_MILLIS);
+#endif
 
 #endif
 }
@@ -131,6 +143,13 @@ void log_configuration(void)
 {
     log_component_setup();
 
+#ifdef CONFIG_HCC_ESP32_FLASH_LED
+    ESP_LOGI(TAG, "[conf] LED flash on important actions: true");
+    ESP_LOGI(TAG, "[conf] LED pin: %d", CONFIG_HCC_ESP32_FLASH_LED_GPIO);
+#else
+    ESP_LOGI(TAG, "[conf] LED flash on important actions: false");
+#endif
+
     ESP_LOGI(TAG, "[conf/MQTT] broker: %s", CONFIG_BROKER_URL);
     ESP_LOGI(TAG, "[conf/MQTT] pub root: %s", CONFIG_BROKER_PUB_ROOT);
     ESP_LOGI(TAG, "[conf/MQTT] sub root: %s", CONFIG_BROKER_SUB_ROOT);
@@ -144,8 +163,8 @@ void log_configuration(void)
  * but in one line (multiline for readability).
  *
  * {
- *  "deviceId": "ESP32-246F28A7C53C",
- *  "entityType": "sensor",
+ *  "device_id": "ESP32-246F28A7C53C",
+ *  "entity_type": "sensor",
  *  "sources": [
  *      "D90301A2792B0528",
  *      "E40300A27970F728"
@@ -361,6 +380,17 @@ void mqtt_start(void)
     esp_mqtt_client_start(mqtt_client);
 }
 
+void setLED(int state) {
+
+#ifdef CONFIG_HCC_ESP32_FLASH_LED
+
+    gpio_pad_select_gpio(GPIO_LED);
+    gpio_set_direction(GPIO_LED, GPIO_MODE_OUTPUT);
+    gpio_set_level(GPIO_LED, state);
+
+#endif
+}
+
 extern "C" void app_main(void)
 {
     ESP_LOGI(TAG, "[core] Oh, hai");
@@ -384,6 +414,7 @@ extern "C" void app_main(void)
     onewire_start();
     create_identity();
 
+    setLED(1);
     /* This helper function configures Wi-Fi or Ethernet, as selected in menuconfig.
      * Read "Establishing Wi-Fi or Ethernet Connection" section in
      * examples/protocols/README.md for more information about this function.
@@ -391,5 +422,8 @@ extern "C" void app_main(void)
     ESP_ERROR_CHECK(example_connect());
 
     mqtt_start();
+
+    setLED(0);
+
     onewire_poll();
 }
