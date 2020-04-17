@@ -106,6 +106,10 @@ void log_onewire_configuration()
     ESP_LOGI(TAG, "[conf/1-Wire] max devices recognized: %d", CONFIG_HCC_ESP32_ONE_WIRE_MAX_DEVICES);
     ESP_LOGI(TAG, "[conf/1-Wire] sampling interval: %ds", CONFIG_ONE_WIRE_POLL_SECONDS);
 
+#ifdef CONFIG_HCC_ESP32_FLASH_LED
+    ESP_LOGI(TAG, "[conf/1-Wire] LED flash duration: %dms", CONFIG_HCC_ESP32_FLASH_LED_MILLIS);
+#endif
+
 #endif
 }
 
@@ -138,6 +142,13 @@ void log_a4988_configuration()
 void log_configuration(void)
 {
     log_component_setup();
+
+#ifdef CONFIG_HCC_ESP32_FLASH_LED
+    ESP_LOGI(TAG, "[conf] LED flash on important actions: true");
+    ESP_LOGI(TAG, "[conf] LED pin: %d", CONFIG_HCC_ESP32_FLASH_LED_GPIO);
+#else
+    ESP_LOGI(TAG, "[conf] LED flash on important actions: false");
+#endif
 
     ESP_LOGI(TAG, "[conf/MQTT] broker: %s", CONFIG_BROKER_URL);
     ESP_LOGI(TAG, "[conf/MQTT] pub root: %s", CONFIG_BROKER_PUB_ROOT);
