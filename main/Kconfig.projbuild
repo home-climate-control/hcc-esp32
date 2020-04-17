@@ -215,12 +215,22 @@ menu "hcc-esp32 Configuration"
         config ONE_WIRE_GPIO
             depends on HCC_ESP32_ONE_WIRE_ENABLE
             int "1-Wire GPIO number"
-            range 0 34
+            range 0 33
             default 4
             help
                 GPIO number (IOxx) to access One Wire Bus.
                 Some GPIOs are used for other purposes (flash connections, etc.) and cannot be used.
-                GPIOs 35-39 are input-only so cannot be used to drive the One Wire Bus.
+                GPIOs 34-39 are input-only so cannot be used to drive the One Wire Bus.
+
+        config HCC_ESP32_ONE_WIRE_MAX_DEVICES
+            depends on HCC_ESP32_ONE_WIRE_ENABLE
+            int "Max number of 1-Wire devices to recognize"
+            range 4 16
+            default 8
+            help
+                Max number of 1-Wire devices to find and poll.
+                VT: FIXME: This should really be a dynamic.
+                (https://github.com/home-climate-control/hcc-esp32/issues/15)
 
         config ONE_WIRE_POLL_SECONDS
             depends on HCC_ESP32_ONE_WIRE_ENABLE
@@ -241,22 +251,22 @@ menu "hcc-esp32 Configuration"
         config HCC_ESP32_A4988_PIN_DIR
             depends on HCC_ESP32_A4988_ENABLE
             int "DIR GPIO number"
-            range 0 34
+            range 0 33
             default 26
             help
                 GPIO number (IOxx) to connect to A4988 pin 8 (DIR).
                 Some GPIOs are used for other purposes (flash connections, etc.) and cannot be used.
-                GPIOs 35-39 are input-only so cannot be used to control A4988.
+                GPIOs 34-39 are input-only so cannot be used to control A4988.
 
         config HCC_ESP32_A4988_PIN_STEP
             depends on HCC_ESP32_A4988_ENABLE
             int "STEP GPIO number"
-            range 0 34
+            range 0 33
             default 25
             help
                 GPIO number (IOxx) to connect to A4988 pin 7 (STEP).
                 Some GPIOs are used for other purposes (flash connections, etc.) and cannot be used.
-                GPIOs 35-39 are input-only so cannot be used to control A4988.
+                GPIOs 34-39 are input-only so cannot be used to control A4988.
 
         config HCC_ESP32_A4988_MICROSTEPPING
             depends on HCC_ESP32_A4988_ENABLE
@@ -266,37 +276,37 @@ menu "hcc-esp32 Configuration"
                 When this switch is enabled, three additional GPIOs are required, but it becomes possible to use microstepping.
                 Leaving MSx pins disconnected will make the driver operate in full step mode.
                 Some GPIOs are used for other purposes (flash connections, etc.) and cannot be used.
-                GPIOs 35-39 are input-only so cannot be used to control A4988.
+                GPIOs 34-39 are input-only so cannot be used to control A4988.
 
         config HCC_ESP32_A4988_PIN_MS1
             depends on HCC_ESP32_A4988_MICROSTEPPING
             int "MS1 GPIO number"
-            range 0 34
+            range 0 33
             default 14
             help
                 GPIO number (IOxx) to connect to A4988 pin 2 (MS1).
                 Some GPIOs are used for other purposes (flash connections, etc.) and cannot be used.
-                GPIOs 35-39 are input-only so cannot be used to control A4988.
+                GPIOs 34-39 are input-only so cannot be used to control A4988.
 
         config HCC_ESP32_A4988_PIN_MS2
             depends on HCC_ESP32_A4988_MICROSTEPPING
             int "MS2 GPIO number"
-            range 0 34
+            range 0 33
             default 32
             help
                 GPIO number (IOxx) to connect to A4988 pin 3 (MS2).
                 Some GPIOs are used for other purposes (flash connections, etc.) and cannot be used.
-                GPIOs 35-39 are input-only so cannot be used to control A4988.
+                GPIOs 34-39 are input-only so cannot be used to control A4988.
 
         config HCC_ESP32_A4988_PIN_MS3
             depends on HCC_ESP32_A4988_MICROSTEPPING
             int "MS3 GPIO number"
-            range 0 34
+            range 0 33
             default 15
             help
                 GPIO number (IOxx) to connect to A4988 pin 4 (MS3).
                 Some GPIOs are used for other purposes (flash connections, etc.) and cannot be used.
-                GPIOs 35-39 are input-only so cannot be used to control A4988.
+                GPIOs 34-39 are input-only so cannot be used to control A4988.
 
         config HCC_ESP32_A4988_POWERSAVE
             depends on HCC_ESP32_A4988_ENABLE
@@ -308,13 +318,13 @@ menu "hcc-esp32 Configuration"
         config HCC_ESP32_A4988_PIN_SLP
             depends on HCC_ESP32_A4988_POWERSAVE
             int "SLP GPIO number"
-            range 0 34
+            range 0 33
             default 33
             help
                 GPIO number (IOxx) to connect to A4988 pin 6 (SLP).
                 Note that usually RST and SLP pins are connected together, so you will have to figure out how to pull RST high.
                 Some GPIOs are used for other purposes (flash connections, etc.) and cannot be used.
-                GPIOs 35-39 are input-only so cannot be used to control A4988.
+                GPIOs 34-39 are input-only so cannot be used to control A4988.
 
         config HCC_ESP32_A4988_LIMIT_SWITCH_ENABLE
             depends on HCC_ESP32_A4988_ENABLE
@@ -331,7 +341,7 @@ menu "hcc-esp32 Configuration"
             help
                 GPIO number (IOxx) to connect the limit switch to.
                 Some GPIOs are used for other purposes (flash connections, etc.) and cannot be used.
-                OGPIOs 35-39 are input-only so cannot be used to control A4988.
+                OGPIOs 34-39 are input-only so cannot be used to control A4988.
 
         choice HCC_ESP32_A4988_LIMIT_DIRECTION
             depends on HCC_ESP32_A4988_LIMIT_SWITCH_ENABLE
