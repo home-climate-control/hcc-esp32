@@ -144,8 +144,8 @@ void log_configuration(void)
  * but in one line (multiline for readability).
  *
  * {
- *  "deviceId": "ESP32-246F28A7C53C",
- *  "entityType": "sensor",
+ *  "device_id": "ESP32-246F28A7C53C",
+ *  "entity_type": "sensor",
  *  "sources": [
  *      "D90301A2792B0528",
  *      "E40300A27970F728"
