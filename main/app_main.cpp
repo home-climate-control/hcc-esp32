@@ -42,7 +42,7 @@
 
 static const char *TAG = "hcc-esp32";
 
-#define GPIO_LED (gpio_num_t)(CONFIG_HCC_ESP32_ONE_WIRE_BLINK_GPIO)
+#define GPIO_LED (gpio_num_t)(CONFIG_HCC_ESP32_FLASH_LED_GPIO)
 
 #ifdef CONFIG_HCC_ESP32_ONE_WIRE_ENABLE
 
@@ -367,7 +367,7 @@ void mqtt_start(void)
 
 void setLED(int state) {
 
-#ifdef CONFIG_HCC_ESP32_ONE_WIRE_BLINK
+#ifdef CONFIG_HCC_ESP32_FLASH_LED
 
     gpio_pad_select_gpio(GPIO_LED);
     gpio_set_direction(GPIO_LED, GPIO_MODE_OUTPUT);

@@ -16,7 +16,7 @@ namespace hcc_onewire {
 #define DS18B20_RESOLUTION   (DS18B20_RESOLUTION_12_BIT)
 #define SAMPLE_PERIOD_MILLIS        (1000 * CONFIG_ONE_WIRE_POLL_SECONDS)
 
-#define GPIO_LED (gpio_num_t)(CONFIG_HCC_ESP32_ONE_WIRE_BLINK_GPIO)
+#define GPIO_LED (gpio_num_t)(CONFIG_HCC_ESP32_FLASH_LED_GPIO)
 
 int OneWire::browse()
 {
@@ -84,14 +84,14 @@ int OneWire::browse()
 void flashLED()
 {
 
-#ifdef CONFIG_HCC_ESP32_ONE_WIRE_BLINK
+#ifdef CONFIG_HCC_ESP32_FLASH_LED
 
     gpio_pad_select_gpio(GPIO_LED);
     gpio_set_direction(GPIO_LED, GPIO_MODE_OUTPUT);
 
     gpio_set_level(GPIO_LED, 1);
 
-    const TickType_t delayMillis = CONFIG_HCC_ESP32_ONE_WIRE_BLINK_MILLIS / portTICK_PERIOD_MS;
+    const TickType_t delayMillis = CONFIG_HCC_ESP32_FLASH_LED_MILLIS / portTICK_PERIOD_MS;
     vTaskDelay( delayMillis );
 
     gpio_set_level(GPIO_LED, 0);

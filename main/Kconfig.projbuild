@@ -1,5 +1,23 @@
 menu "hcc-esp32 Configuration"
 
+    menu "General"
+
+        config HCC_ESP32_FLASH_LED
+            depends on HCC_ESP32_ONE_WIRE_ENABLE
+            bool "Flash the LED on important actions"
+            default true
+            help
+
+                If enabled, the onboard LED will stay on while establishing
+                WiFi connectivity and connecting to the MQTT broker, and
+                also for the period specified in 1-Wire menu before and
+                after 1-Wire poll. This will not play nicely with other
+                entities that may want to control the LED, so disable if it
+                causes unwanted interference, or if you're running out of
+                GPIO pins.
+
+    endmenu
+
     menu "Connectivity"
         choice EXAMPLE_CONNECT_INTERFACE
             prompt "Connect using"
@@ -241,18 +259,8 @@ menu "hcc-esp32 Configuration"
                 How often 1-Wire sensors need to be polled. 30 seconds is enough
                 for HVAC applications.
 
-        config HCC_ESP32_ONE_WIRE_BLINK
-            depends on HCC_ESP32_ONE_WIRE_ENABLE
-            bool "Blink before and after 1-Wire poll"
-            default true
-            help
-                If enabled, the onboard LED will stay on for 5ms before and
-                after 1-Wire poll. This will not play nicely with other
-                entities that may want to control the LED, so disable if it
-                causes unwanted interference.
-
-        config HCC_ESP32_ONE_WIRE_BLINK_GPIO
-            depends on HCC_ESP32_ONE_WIRE_BLINK
+        config HCC_ESP32_FLASH_LED_GPIO
+            depends on HCC_ESP32_FLASH_LED
             int "LED GPIO number"
             range 0 33
             default 13
@@ -261,9 +269,9 @@ menu "hcc-esp32 Configuration"
                 Some GPIOs are used for other purposes (flash connections, etc.) and cannot be used.
                 GPIOs 34-39 are input-only so cannot be used to control A4988.
 
-        config HCC_ESP32_ONE_WIRE_BLINK_MILLIS
-            depends on HCC_ESP32_ONE_WIRE_BLINK
-            int "Milliseconds to keep the LED on"
+        config HCC_ESP32_FLASH_LED_MILLIS
+            depends on HCC_ESP32_FLASH_LED
+            int "Milliseconds to keep the LED on around 1-Wire poll"
             range 1 100
             default 10
             help
