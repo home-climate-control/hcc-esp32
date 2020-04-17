@@ -7,7 +7,7 @@ extern "C" {
 
 namespace hcc_onewire {
 
-#define MAX_DEVICES          (8)
+#define MAX_DEVICES (CONFIG_HCC_ESP32_ONE_WIRE_MAX_DEVICES)
 
 
 class OneWire {
