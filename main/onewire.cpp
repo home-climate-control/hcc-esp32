@@ -1,6 +1,7 @@
 #include <string.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "driver/gpio.h"
 
 #include "esp_log.h"
 
@@ -14,6 +15,8 @@ namespace hcc_onewire {
 
 #define DS18B20_RESOLUTION   (DS18B20_RESOLUTION_12_BIT)
 #define SAMPLE_PERIOD_MILLIS        (1000 * CONFIG_ONE_WIRE_POLL_SECONDS)
+
+#define GPIO_LED (gpio_num_t)(CONFIG_HCC_ESP32_ONE_WIRE_BLINK_GPIO)
 
 int OneWire::browse()
 {
@@ -75,8 +78,31 @@ int OneWire::browse()
     return devicesFound;
 }
 
+/**
+ * Turn the LED on for the time specified in menuconfig, then turn it off.
+ */
+void flashLED()
+{
+
+#ifdef CONFIG_HCC_ESP32_ONE_WIRE_BLINK
+
+    gpio_pad_select_gpio(GPIO_LED);
+    gpio_set_direction(GPIO_LED, GPIO_MODE_OUTPUT);
+
+    gpio_set_level(GPIO_LED, 1);
+
+    const TickType_t delayMillis = CONFIG_HCC_ESP32_ONE_WIRE_BLINK_MILLIS / portTICK_PERIOD_MS;
+    vTaskDelay( delayMillis );
+
+    gpio_set_level(GPIO_LED, 0);
+
+#endif
+}
+
 std::vector<float> OneWire::poll()
 {
+
+    flashLED();
 
     // Read temperatures more efficiently by starting conversions on all devices at the same time
     int errors_count[CONFIG_HCC_ESP32_ONE_WIRE_MAX_DEVICES] = {0};
@@ -107,6 +133,8 @@ std::vector<float> OneWire::poll()
         // VT: FIXME: This will not handle errors correctly
         result.push_back(readings[offset]);
     }
+
+    flashLED();
 
     return result;
 }
