@@ -1,14 +1,16 @@
 #ifndef _HCC_ESP32_ONEWIRE_H_
 #define _HCC_ESP32_ONEWIRE_H_
 
+#include <vector>
+#include "owb.h"
+#include "owb_rmt.h"
+#include "ds18b20.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 namespace hcc_onewire {
-
-#define MAX_DEVICES (CONFIG_HCC_ESP32_ONE_WIRE_MAX_DEVICES)
-
 
 class OneWire {
 private:
@@ -29,8 +31,8 @@ private:
     // Initialized in browse()
     OneWireBus *owb = NULL;
 
-    DS18B20_Info *devices[MAX_DEVICES] = {0};
-    char addresses[MAX_DEVICES][17];
+    DS18B20_Info *devices[CONFIG_HCC_ESP32_ONE_WIRE_MAX_DEVICES] = {0};
+    char addresses[CONFIG_HCC_ESP32_ONE_WIRE_MAX_DEVICES][17];
 
     /**
      * Number of devices found on 1-Wire bus. Expected to be atomically set by {@link browse()}.
@@ -51,8 +53,27 @@ public:
      * Returns the number of devices found.
      *
      * @see #devicesFound
+     * @see #getDeviceCount
      */
     int browse();
+
+    /**
+     * Poll the sensors, and return their readings.
+     */
+    std::vector<float> poll();
+
+    /**
+     * Return number of devices discovered on the bus. -1 if {@link #browse()} hasn't been called yet.
+     */
+    inline int getDeviceCount()
+    {
+        return devicesFound;
+    }
+
+    inline char *getAddressAt(int offset)
+    {
+        return addresses[offset];
+    };
 };
 
 }
