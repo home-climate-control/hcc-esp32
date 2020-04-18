@@ -35,7 +35,7 @@ int OneWire::browse()
 
     ESP_LOGI(TAG, "[1-Wire] looking for connected devices on pin %d...", gpioOnewire);
 
-    OneWireBus_ROMCode device_rom_codes[CONFIG_HCC_ESP32_ONE_WIRE_MAX_DEVICES] = {};
+    std::vector<OneWireBus_ROMCode> device_rom_codes;
     OneWireBus_SearchState search_state = {};
     bool found = false;
     owb_search_first(owb, &search_state, &found);
@@ -45,8 +45,8 @@ int OneWire::browse()
         owb_string_from_rom_code(search_state.rom_code, rom_code_s, sizeof(rom_code_s));
         strupr(rom_code_s);
         ESP_LOGI(TAG, "[1-Wire] %d: %s", devices_found, rom_code_s);
-        device_rom_codes[devices_found] = search_state.rom_code;
-        strcpy(addresses[devices_found], rom_code_s);
+        device_rom_codes.push_back(search_state.rom_code);
+        addresses.push_back(rom_code_s);
 
         ++devices_found;
         owb_search_next(owb, &search_state, &found);
@@ -56,7 +56,7 @@ int OneWire::browse()
     // Create DS18B20 devices on the 1-Wire bus
     for (int i = 0; i < devices_found; ++i) {
         DS18B20_Info *ds18b20_info = ds18b20_malloc();
-        devices[i] = ds18b20_info;
+        devices.push_back(ds18b20_info);
 
         if (devices_found == 1) {
             ESP_LOGD(TAG, "[1-Wire] single device optimizations enabled");
@@ -102,10 +102,10 @@ std::vector<float> OneWire::poll()
 
     flashLED();
 
-    // Read temperatures more efficiently by starting conversions on all devices at the same time
-    int errors_count[CONFIG_HCC_ESP32_ONE_WIRE_MAX_DEVICES] = {0};
-    std::vector<float> result;
+    float readings[devices.size()] = { 0 };
+    DS18B20_ERROR errors[devices.size()] = {};
 
+    // Read temperatures more efficiently by starting conversions on all devices at the same time
     ds18b20_convert_all(owb);
 
     // In this application all devices use the same resolution,
@@ -114,12 +114,12 @@ std::vector<float> OneWire::poll()
 
     // Read the results immediately after conversion otherwise it may fail
     // (using printf before reading may take too long)
-    float readings[CONFIG_HCC_ESP32_ONE_WIRE_MAX_DEVICES] = { 0 };
-    DS18B20_ERROR errors[CONFIG_HCC_ESP32_ONE_WIRE_MAX_DEVICES] = {};
-
     for (int offset = 0; offset < devicesFound; ++offset) {
         errors[offset] = ds18b20_read_temp(devices[offset], &readings[offset]);
     }
+
+    int errors_count[devices.size()] = {0};
+    std::vector<float> result;
 
     // Report results in a separate loop, after all have been read
     for (int offset = 0; offset < devicesFound; ++offset) {
