@@ -46,7 +46,7 @@ int OneWire::browse()
         strupr(rom_code_s);
         ESP_LOGI(TAG, "[1-Wire] %d: %s", devices_found, rom_code_s);
         device_rom_codes[devices_found] = search_state.rom_code;
-        strcpy(addresses[devices_found], rom_code_s);
+        addresses.push_back(rom_code_s);
 
         ++devices_found;
         owb_search_next(owb, &search_state, &found);

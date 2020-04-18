@@ -43,7 +43,7 @@ private:
     OneWireBus *owb = NULL;
 
     DS18B20_Info *devices[CONFIG_HCC_ESP32_ONE_WIRE_MAX_DEVICES] = {0};
-    char addresses[CONFIG_HCC_ESP32_ONE_WIRE_MAX_DEVICES][17];
+    std::vector<std::string> addresses;
 
     /**
      * Number of devices found on 1-Wire bus. Expected to be atomically set by {@link browse()}.
@@ -91,7 +91,7 @@ public:
         return devicesFound;
     }
 
-    inline char *getAddressAt(int offset)
+    inline std::string getAddressAt(int offset)
     {
         return addresses[offset];
     };
