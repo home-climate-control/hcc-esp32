@@ -59,7 +59,7 @@ typedef struct sensor_t {
     std::string topic;
 } sensor;
 
-sensor sensors[CONFIG_HCC_ESP32_ONE_WIRE_MAX_DEVICES] = {};
+std::vector<sensor *> sensors;
 #endif
 
 char device_id[19];
@@ -103,7 +103,6 @@ void log_onewire_configuration()
 #ifdef CONFIG_HCC_ESP32_ONE_WIRE_ENABLE
 
     ESP_LOGI(TAG, "[conf/1-Wire] GPIO pin: %d", CONFIG_ONE_WIRE_GPIO);
-    ESP_LOGI(TAG, "[conf/1-Wire] max devices recognized: %d", CONFIG_HCC_ESP32_ONE_WIRE_MAX_DEVICES);
     ESP_LOGI(TAG, "[conf/1-Wire] sampling interval: %ds", CONFIG_ONE_WIRE_POLL_SECONDS);
 
 #ifdef CONFIG_HCC_ESP32_FLASH_LED
@@ -182,7 +181,7 @@ void create_hello()
     int count = oneWire.getDeviceCount();
     const char *sources[count];
     for (int offset = 0; offset < count; offset++) {
-        sources[offset] = (char *) &sensors[offset].address;
+        sources[offset] = sensors[offset]->address.c_str();
     }
 
     cJSON *json_sources = cJSON_CreateStringArray(sources, count);
@@ -242,8 +241,12 @@ void onewire_start(void)
 
     for (int offset = 0; offset < count; offset++) {
 
-        sensors[offset].address = std::string(oneWire.getAddressAt(offset));
-        sensors[offset].topic = create_topic_from_address(sensors[offset].address);
+        sensor *s = new sensor();
+
+        s->address = std::string(oneWire.getAddressAt(offset));
+        s->topic = create_topic_from_address(s->address);
+
+        sensors.push_back(s);
     }
 
 #endif
@@ -254,7 +257,7 @@ void mqtt_send_sample(int offset, float signal)
 
 #ifdef CONFIG_HCC_ESP32_ONE_WIRE_ENABLE
 
-    sensor s = sensors[offset];
+    sensor s = *sensors[offset];
 
     // VT: NOTE: For now, we just have temperature sensors, this may change in the future
 
@@ -297,7 +300,7 @@ void onewire_poll(void)
 
         for (int offset = 0; offset < readings.size(); offset++) {
 
-            ESP_LOGI(TAG, "[1-Wire] %s: %.1fC", sensors[offset].topic.c_str(), readings[offset]);
+            ESP_LOGI(TAG, "[1-Wire] %s: %.1fC", sensors[offset]->topic.c_str(), readings[offset]);
 
             mqtt_send_sample(offset, readings[offset]);
         }

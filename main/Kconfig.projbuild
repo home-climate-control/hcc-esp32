@@ -249,16 +249,6 @@ menu "hcc-esp32 Configuration"
                 Some GPIOs are used for other purposes (flash connections, etc.) and cannot be used.
                 GPIOs 34-39 are input-only so cannot be used to drive the One Wire Bus.
 
-        config HCC_ESP32_ONE_WIRE_MAX_DEVICES
-            depends on HCC_ESP32_ONE_WIRE_ENABLE
-            int "Max number of 1-Wire devices to recognize"
-            range 4 16
-            default 8
-            help
-                Max number of 1-Wire devices to find and poll.
-                VT: FIXME: This should really be a dynamic.
-                (https://github.com/home-climate-control/hcc-esp32/issues/15)
-
         config ONE_WIRE_POLL_SECONDS
             depends on HCC_ESP32_ONE_WIRE_ENABLE
             int "1-Wire bus poll interval"
