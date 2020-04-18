@@ -56,7 +56,7 @@ int OneWire::browse()
     // Create DS18B20 devices on the 1-Wire bus
     for (int i = 0; i < devices_found; ++i) {
         DS18B20_Info *ds18b20_info = ds18b20_malloc();
-        devices[i] = ds18b20_info;
+        devices.push_back(ds18b20_info);
 
         if (devices_found == 1) {
             ESP_LOGD(TAG, "[1-Wire] single device optimizations enabled");

@@ -42,7 +42,12 @@ private:
     // Initialized in browse()
     OneWireBus *owb = NULL;
 
-    DS18B20_Info *devices[CONFIG_HCC_ESP32_ONE_WIRE_MAX_DEVICES] = {0};
+    /**
+     * Device pointers.
+     *
+     * VT: NOTE: If we ever write the destructor, these need to be freed.
+     */
+    std::vector<DS18B20_Info *> devices;
     std::vector<std::string> addresses;
 
     /**
