@@ -1,6 +1,7 @@
 #ifndef _HCC_ESP32_ONEWIRE_H_
 #define _HCC_ESP32_ONEWIRE_H_
 
+#include <string>
 #include <vector>
 #include "owb.h"
 #include "owb_rmt.h"

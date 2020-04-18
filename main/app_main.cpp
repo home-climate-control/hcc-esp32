@@ -55,8 +55,8 @@ hcc_onewire::OneWire oneWire(TAG, (gpio_num_t)CONFIG_ONE_WIRE_GPIO, GPIO_LED, CO
 #define SAMPLE_PERIOD_MILLIS (1000 * CONFIG_ONE_WIRE_POLL_SECONDS)
 
 typedef struct sensor_t {
-    char address[17];
-    char *topic;
+    std::string address;
+    std::string topic;
 } sensor;
 
 sensor sensors[CONFIG_HCC_ESP32_ONE_WIRE_MAX_DEVICES] = {};
@@ -226,18 +226,12 @@ void create_identity()
 /**
  * Allocates memory and returns the sensor topic rendered as "${CONFIG_BROKER_PUB_ROOT}/sensor/${ADDRESS}"
  */
-char *create_topic_from_address(const char *address)
+std::string create_topic_from_address(std::string address)
 {
+    std::string root = CONFIG_BROKER_PUB_ROOT;
+    std::string sensor = "/sensor/";
 
-    const char *sensor = "/sensor/";
-    int bufsize = strlen(CONFIG_BROKER_PUB_ROOT) + strlen(sensor) + strlen(address) + 1;
-    char *result = (char *) malloc(bufsize);
-
-    strcpy(result, CONFIG_BROKER_PUB_ROOT);
-    strcpy(result + strlen(CONFIG_BROKER_PUB_ROOT), sensor);
-    strcpy(result + strlen(CONFIG_BROKER_PUB_ROOT) + strlen(sensor), address);
-
-    return result;
+    return root + sensor + address;
 }
 
 void onewire_start(void)
@@ -248,7 +242,7 @@ void onewire_start(void)
 
     for (int offset = 0; offset < count; offset++) {
 
-        strcpy(sensors[offset].address, oneWire.getAddressAt(offset));
+        sensors[offset].address = std::string(oneWire.getAddressAt(offset));
         sensors[offset].topic = create_topic_from_address(sensors[offset].address);
     }
 
@@ -263,21 +257,21 @@ void mqtt_send_sample(int offset, float signal)
     sensor s = sensors[offset];
 
     // VT: NOTE: For now, we just have temperature sensors, this may change in the future
-    char signature[strlen(s.address) + 2];
-    strcpy((char *)&signature[0], "T");
-    strcpy((char *)&signature[1], s.address);
+
+    std::string signature = "T";
+    signature += s.address;
 
     cJSON *json_root = cJSON_CreateObject();
     cJSON_AddItemToObject(json_root, "entity_type", cJSON_CreateString("sensor"));
-    cJSON_AddItemToObject(json_root, "name", cJSON_CreateString(s.address));
-    cJSON_AddItemToObject(json_root, "signature", cJSON_CreateString(signature));
+    cJSON_AddItemToObject(json_root, "name", cJSON_CreateString(s.address.c_str()));
+    cJSON_AddItemToObject(json_root, "signature", cJSON_CreateString(signature.c_str()));
     cJSON_AddNumberToObject(json_root, "signal", signal);
     cJSON_AddItemToObject(json_root, "device_id", cJSON_CreateString(device_id));
 
     char *message = cJSON_PrintUnformatted(json_root);
-    ESP_LOGI(TAG, "[mqtt] %s %s", s.topic, message);
+    ESP_LOGI(TAG, "[mqtt] %s %s", s.topic.c_str(), message);
 
-    int msg_id = esp_mqtt_client_publish(mqtt_client, s.topic, message, 0, 1, 0);
+    int msg_id = esp_mqtt_client_publish(mqtt_client, s.topic.c_str(), message, 0, 1, 0);
     ESP_LOGI(TAG, "sent publish successful, msg_id=%d", msg_id);
 
     free(message);
@@ -303,7 +297,7 @@ void onewire_poll(void)
 
         for (int offset = 0; offset < readings.size(); offset++) {
 
-            ESP_LOGI(TAG, "[1-Wire] %s: %.1fC", sensors[offset].topic, readings[offset]);
+            ESP_LOGI(TAG, "[1-Wire] %s: %.1fC", sensors[offset].topic.c_str(), readings[offset]);
 
             mqtt_send_sample(offset, readings[offset]);
         }
