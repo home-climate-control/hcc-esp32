@@ -3,7 +3,6 @@ menu "hcc-esp32 Configuration"
     menu "General"
 
         config HCC_ESP32_FLASH_LED
-            depends on HCC_ESP32_ONE_WIRE_ENABLE
             bool "Flash the LED on important actions"
             default true
             help
