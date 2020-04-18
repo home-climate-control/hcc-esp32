@@ -7,6 +7,7 @@
  * 1-Wire code based on https://github.com/DavidAntliff/esp32-ds18b20-example
  */
 
+#include <string>
 #include <stdio.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -33,7 +34,6 @@
 
 #include "cJSON.h"
 
-#include "onewire.h"
 #include "stepper_api.h"
 
 #if !(CONFIG_HCC_ESP32_ONE_WIRE_ENABLE || CONFIG_HCC_ESP32_A4988_ENABLE)
@@ -50,6 +50,7 @@ static const char *TAG = "hcc-esp32";
 #endif
 
 #ifdef CONFIG_HCC_ESP32_ONE_WIRE_ENABLE
+#include "onewire.h"
 hcc_onewire::OneWire oneWire(TAG, (gpio_num_t)CONFIG_ONE_WIRE_GPIO, GPIO_LED, CONFIG_HCC_ESP32_FLASH_LED_MILLIS);
 
 #define SAMPLE_PERIOD_MILLIS (1000 * CONFIG_ONE_WIRE_POLL_SECONDS)
@@ -60,6 +61,16 @@ typedef struct sensor_t {
 } sensor;
 
 std::vector<sensor *> sensors;
+
+struct sensor_sample {
+    const char *entity_type;
+    const char *name;
+    const char *signature;
+    const float signal;
+    const long timestamp;
+    const char *device_id;
+};
+
 #endif
 
 char device_id[19];
@@ -70,15 +81,6 @@ struct hello {
     const char *entity_type;
     const char *device_id;
     const char *sources[];
-};
-
-struct sensor_sample {
-    const char *entity_type;
-    const char *name;
-    const char *signature;
-    const float signal;
-    const long timestamp;
-    const char *device_id;
 };
 
 esp_mqtt_client_handle_t mqtt_client;
@@ -222,6 +224,7 @@ void create_identity()
     create_hello();
 }
 
+#ifdef CONFIG_HCC_ESP32_ONE_WIRE_ENABLE
 /**
  * Allocates memory and returns the sensor topic rendered as "${CONFIG_BROKER_PUB_ROOT}/sensor/${ADDRESS}"
  */
@@ -232,6 +235,7 @@ std::string create_topic_from_address(std::string address)
 
     return root + sensor + address;
 }
+#endif
 
 void onewire_start(void)
 {
